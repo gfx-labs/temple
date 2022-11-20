@@ -50,7 +50,11 @@ var defaultFuncs = template.FuncMap{
 	"some": func(v any) bool {
 		return v != nil
 	},
-	"repeat": strings.Repeat,
+	"repeat":     strings.Repeat,
+	"trimPrefix": strings.TrimPrefix,
+	"trimSuffix": strings.TrimSuffix,
+	"hasPrefix":  strings.HasPrefix,
+	"hasSuffix":  strings.HasSuffix,
 }
 
 func New(path string) *Sanctum {
