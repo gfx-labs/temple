@@ -2,7 +2,7 @@ package sanctum
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -75,8 +75,8 @@ func (t *Sanctum) FS() afero.Fs {
 	return t.fs
 }
 
-func (t *Sanctum) ReadObjectFile(item any, pth ...string) error {
-	bts, err := afero.ReadFile(t.fs, path.Join(pth...))
+func (t *Sanctum) ReadObjectFile(item any, path ...string) error {
+	bts, err := afero.ReadFile(t.fs, filepath.Join(path...))
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (t *Sanctum) Pray() error {
 			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
 		}
 		t.fs.MkdirAll(v.PackagePath, 0777)
-		file, err := t.fs.Create(path.Join(v.PackagePath, v.FileName))
+		file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
 		defer file.Close()
 		if err != nil {
 			return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
