@@ -21,8 +21,14 @@ func New() *Sanctum {
 func (t *Sanctum) RegisterTemplate(name string, content string) {
 	t.template[name] = content
 }
+
 func (t *Sanctum) RegisterFunc(s string, fn any) {
 	t.fm[s] = fn
+}
+func (t *Sanctum) RegisterFuncVar(s string, val any) {
+	t.fm[s] = func() any {
+		return val
+	}
 }
 
 func (t *Sanctum) Execute(s string, obj any, args ...any) (string, error) {
