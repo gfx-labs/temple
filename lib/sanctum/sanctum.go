@@ -1,6 +1,7 @@
 package sanctum
 
 import (
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -14,8 +15,17 @@ func (t *Sanctum) RegisterFunc(s string, fn any) {
 	t.fm[s] = fn
 }
 
-func (t *Sanctum) Execute(s string, obj any) (string, error) {
-	tmp := template.Must(template.New(s).Funcs(t.fm).Parse(t.template[s]))
+func (t *Sanctum) Execute(s string, obj any, args ...any) (string, error) {
+	tfm := make(template.FuncMap)
+	for k, v := range args {
+		tfm[fmt.Sprintf("arg%d", k)] = func() any {
+			return v
+		}
+	}
+	tmp := template.Must(template.New(s).
+		Funcs(t.fm).
+		Funcs(tfm).
+		Parse(t.template[s]))
 	sb := new(strings.Builder)
 	err := tmp.Execute(sb, obj)
 	if err != nil {
