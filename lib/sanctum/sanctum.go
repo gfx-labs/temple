@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
 )
@@ -121,6 +122,7 @@ func (t *Sanctum) execute(s string, obj any, args ...any) (string, error) {
 		}
 	}
 	tmp := template.New(s).
+		Funcs(sprig.FuncMap()).
 		Funcs(t.fm).
 		Funcs(tfm)
 	for _, v := range t.template {
