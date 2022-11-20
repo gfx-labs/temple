@@ -81,10 +81,8 @@ func (t *Sanctum) Pray() error {
 func (t *Sanctum) execute(s string, obj any, args ...any) (string, error) {
 	tfm := make(template.FuncMap)
 	for k, v := range args {
-		if v != nil {
-			tfm[fmt.Sprintf("arg%d", k)] = func() any {
-				return v
-			}
+		tfm[fmt.Sprintf("arg%d", k)] = func() any {
+			return v
 		}
 	}
 	tmp := template.New(s).
