@@ -14,6 +14,9 @@ func SelectPreset(p preset.Preset) {
 	curPreset = p
 }
 
+func RegisterTemplateFile(name string) {
+	t.RegisterTemplateFile(name)
+}
 func RegisterTemplate(name string, content string) {
 	t.RegisterTemplate(name, content)
 }
