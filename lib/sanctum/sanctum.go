@@ -11,6 +11,9 @@ type Sanctum struct {
 	fm       template.FuncMap
 }
 
+type Foyer struct {
+}
+
 func New() *Sanctum {
 	return &Sanctum{
 		template: map[string]string{},
@@ -38,10 +41,13 @@ func (t *Sanctum) Execute(s string, obj any, args ...any) (string, error) {
 			return v
 		}
 	}
-	tmp := template.Must(template.New(s).
+	tmp := template.New(s).
 		Funcs(t.fm).
-		Funcs(tfm).
-		Parse(t.template[s]))
+		Funcs(tfm)
+	for _, v := range t.template {
+		tmp = template.Must(tmp.Parse(v))
+	}
+	tmp = template.Must(tmp.Parse(t.template[s]))
 	sb := new(strings.Builder)
 	err := tmp.Execute(sb, obj)
 	if err != nil {
