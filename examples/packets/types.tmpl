@@ -1,0 +1,306 @@
+import (
+	"gfx.cafe/etherlands/go/common/protocol/types"
+	"io"
+)
+
+var _ io.Reader
+
+type Packet interface {
+	PacketId() VarInt
+
+	Namespace() Namespace
+
+	PacketName() string
+
+	Unmarshal(r io.Reader) error
+	Marshal(w io.Writer) error
+}
+
+type Namespace interface {
+	PacketById(id VarInt) Packet
+}
+
+{{define "eval" -}}
+	{{$map := (index . 0) -}}
+	{{$variable := (index . 1) -}}
+	{{$condition := (index . 2) -}}
+
+	{{if $condition.Field -}}
+		{{getMap $map $condition.Field}}
+	{{- else if some $condition.Value -}}
+		{{$condition.Value}}
+	{{- else if $condition.Equal -}}
+		({{template "eval" (list $map $variable (index $condition.Equal 0))}}) == ({{template "eval" (list $map $variable (index $condition.Equal 1))}})
+	{{- else if $condition.NotEqual -}}
+		({{template "eval" (list $map $variable (index $condition.NotEqual 0))}}) != ({{template "eval" (list $map $variable (index $condition.NotEqual 1))}})
+    {{- else if $condition.LessThan -}}
+		({{template "eval" (list $map $variable (index $condition.LessThan 0))}}) < ({{template "eval" (list $map $variable (index $condition.LessThan 1))}})
+    {{- else if $condition.GreaterThan -}}
+		({{template "eval" (list $map $variable (index $condition.GreaterThan 0))}}) > ({{template "eval" (list $map $variable (index $condition.GreaterThan 1))}})
+	{{- else if $condition.And -}}
+		({{template "eval" (list $map $variable (index $condition.And 0))}}) & ({{template "eval" (list $map $variable (index $condition.And 1))}})
+	{{- else if $condition.Multiply -}}
+		{{$first := true -}}
+		{{range $idx, $operand := $condition.Multiply -}}
+			{{if $first -}}
+				{{$first = false}}
+			{{- else -}}
+				*
+			{{- end -}}
+			({{template "eval" (list $map $variable $operand)}})
+		{{- end -}}
+	{{- else if $condition.Or -}}
+        {{$first := true -}}
+        {{range $idx, $operand := $condition.Or -}}
+            {{if $first -}}
+                {{$first = false}}
+            {{- else -}}
+				||
+            {{- end -}}
+            ({{template "eval" (list $map $variable $operand)}})
+        {{- end -}}
+	{{- end -}}
+{{end -}}
+
+{{define "typeFor" -}}
+	{{if .Type -}}
+		{{.Type -}}
+	{{else if .Slice -}}
+		[]{{template "typeFor" .Slice -}}
+	{{else if .Optional -}}
+		struct {
+			inner *{{template "typeFor" .Optional}}
+		}
+	{{- else if .Array -}}
+		[{{.Array.Length}}]{{template "typeFor" .Array -}}
+	{{else if .Struct -}}
+		struct {
+			{{range $idx, $field := .Struct -}}
+				{{upperCamel $field.Name}} {{template "typeFor" $field}}
+			{{end -}}
+		}
+	{{- else if .Enum -}}
+		any
+	{{- else -}}
+		struct{}
+	{{- end -}}
+{{end -}}
+
+{{define "marshalFor" -}}
+	{{$variable := (index . 0) -}}
+	{{$type := (index . 1) -}}
+	{{$map := (index . 2) -}}
+	{{$name := (index . 3) -}}
+	{{$temp := (index . 4) -}}
+
+	{{$_ := setMap $map $type.Name $variable -}}
+
+	{{if $type.Type -}}
+		{{if isGeneratedType $type.Type -}}
+			err = {{$variable}}.Marshal(writer)
+		{{else -}}
+			err = types.Marshal{{upperCamel $type.Type}}(writer, {{$type.Type}}({{$variable}}))
+		{{end -}}
+		if err != nil {
+			return
+		}
+	{{else if $type.Slice -}}
+		{{if $type.Slice.Prefix -}}
+			{
+				length := {{$type.Slice.Prefix}}(len({{$variable}}))
+				{{if isGeneratedType $type.Slice.Prefix -}}
+					err = length.Marshal(writer)
+				{{else -}}
+					err = types.Marshal{{upperCamel $type.Slice.Prefix}}(writer, length)
+				{{end -}}
+				if err != nil {
+					return
+				}
+				{{$iName := printf "temp%d" $temp -}}
+            	{{$temp = add $temp 1 -}}
+				for _, {{$iName}} := range {{$variable}} {
+					{{template "marshalFor" (list $iName $type.Slice (cloneMap $map) "" $temp) -}}
+				}
+			}
+		{{else -}}
+			{{$iName := printf "temp%d" $temp -}}
+            {{$temp = add $temp 1 -}}
+			for _, {{$iName}} := range {{$variable}} {
+				{{template "marshalFor" (list $iName $type.Slice $map "" $temp) -}}
+			}
+		{{end -}}
+	{{else if $type.Optional -}}
+		if {{$variable}}.inner == nil {
+			err = types.MarshalBool(writer, false)
+			if err != nil {
+				return
+			}
+		} else {
+			err = types.MarshalBool(writer, true)
+			if err != nil {
+				return
+			}
+			{{template "marshalFor" (list (printf "(*%s.inner)" $variable) $type.Optional (cloneMap $map) "" $temp) -}}
+		}
+	{{else if $type.Array -}}
+		{{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		for _, {{$iName}} := range {{$variable}} {
+			{{template "marshalFor" (list $iName $type.Array (cloneMap $map) "" $temp) -}}
+		}
+	{{else if $type.Struct -}}
+		{{range $idx, $field := $type.Struct -}}
+			{{if $field.When -}}
+				if {{template "eval" (list $map $variable $field.When)}} {
+			{{end -}}
+			{{template "marshalFor" (list (printf "%s.%s" $variable (upperCamel $field.Name)) $field $map "" $temp) -}}
+			{{if $field.When -}}
+				}
+			{{end -}}
+		{{end -}}
+	{{else if $type.Enum -}}
+        {{$iName := printf "temp%d" $temp -}}
+		{{$temp = add $temp 1 -}}
+		switch {{getMap $map $type.Enum.Discriminator}} {
+		{{range $key, $variant := $type.Enum.Variants -}}
+			case {{if isString $key}}"{{end}}{{$key}}{{if isString $key}}"{{end}}:
+				{{$iName}} := {{$variable}}.({{template "typeFor" $variant}})
+            	{{template "marshalFor" (list $iName $variant (cloneMap $map) "" $temp) -}}
+        {{end -}}
+		}
+	{{end -}}
+{{end -}}
+
+{{define "unmarshalFor" -}}
+	{{$variable := (index . 0) -}}
+	{{$type := (index . 1) -}}
+    {{$map := (index . 2) -}}
+	{{$name := (index . 3) -}}
+	{{$temp := (index . 4) -}}
+
+    {{$_ := setMap $map $type.Name $variable -}}
+
+	{{if $type.Type -}}
+		{{if isGeneratedType $type.Type -}}
+			err = {{$variable}}.Unmarshal(reader)
+		{{else -}}
+			{
+				var temp {{$type.Type}}
+				temp, err = types.Unmarshal{{upperCamel $type.Type}}(reader)
+				{{$variable}} = {{$name}}(temp)
+			}
+		{{end -}}
+		if err != nil {
+			return
+		}
+	{{else if $type.Slice -}}
+		{{if $type.Slice.Prefix -}}
+		{
+			{{if isGeneratedType $type.Slice.Prefix -}}
+				var length {{$type.Slice.Prefix}}
+				err = length.Unmarshal(reader)
+			{{else -}}
+				var length {{$type.Slice.Prefix}}
+				length, err = types.Unmarshal{{upperCamel $type.Slice.Prefix}}(reader)
+			{{end -}}
+			if err != nil {
+				return
+			}
+			{{$variable}} = make({{template "typeFor" $type}}, int(length))
+			{{$iName := printf "temp%d" $temp -}}
+			{{$temp = add $temp 1 -}}
+			for {{$iName}} := range {{$variable}} {
+				{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Slice (cloneMap $map) "" $temp) -}}
+			}
+		}
+        {{else if $type.Slice.SizeFunc -}}
+			{{$variable}} = make({{template "typeFor" $type}}, {{template "eval" (list $map $variable $type.Slice.SizeFunc)}})
+            {{$iName := printf "temp%d" $temp -}}
+            {{$temp = add $temp 1 -}}
+			for {{$iName}} := range {{$variable}} {
+				{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Slice (cloneMap $map) "" $temp) -}}
+			}
+        {{else if $type.Slice.Until -}}
+            {{$iName := printf "temp%d" $temp -}}
+            {{$temp = add $temp 1 -}}
+			for {
+				{{$iName}} := *new({{template "typeFor" $type.Slice}})
+				{{template "unmarshalFor" (list $iName $type.Slice $map "" $temp) -}}
+
+            	{{$variable}} = append({{$variable}}, {{$iName}})
+				if {{template "eval" (list $map $iName $type.Slice.Until)}} {
+					break
+				}
+			}
+        {{else -}}
+			{{$variable}}, err = io.ReadAll(reader)
+			if err != nil {
+				return
+			}
+        {{end -}}
+	{{else if $type.Optional -}}
+		{
+			var exists bool
+			exists, err = types.UnmarshalBool(reader)
+			if err != nil {
+				return
+			}
+			if exists {
+				{{$variable}}.inner = new({{template "typeFor" $type.Optional}})
+				{{template "unmarshalFor" (list (printf "(*%s.inner)" $variable) $type.Optional (cloneMap $map) "" $temp) -}}
+			}
+		}
+	{{else if $type.Array -}}
+        {{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		for {{$iName}} := range {{$variable}} {
+			{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Array (cloneMap $map) "" $temp) -}}
+		}
+	{{else if $type.Struct -}}
+		{{range $idx, $field := $type.Struct -}}
+            {{if $field.When -}}
+				if {{template "eval" (list $map $variable $field.When)}} {
+            {{end -}}
+			{{template "unmarshalFor" (list (printf "%s.%s" $variable (upperCamel $field.Name)) $field $map "" $temp) -}}
+            {{if $field.When -}}
+				}
+            {{end -}}
+		{{end -}}
+	{{else if $type.Enum -}}
+        {{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		switch {{getMap $map $type.Enum.Discriminator}} {
+        {{range $key, $variant := $type.Enum.Variants -}}
+			case {{if isString $key}}"{{end}}{{$key}}{{if isString $key}}"{{end}}:
+				var {{$iName}} {{template "typeFor" $variant}}
+            	{{template "unmarshalFor" (list $iName $variant (cloneMap $map) "" $temp) -}}
+				{{$variable}} = {{$iName}}
+        {{end -}}
+		}
+	{{end -}}
+{{end -}}
+
+{{define "allFor" -}}
+	{{$name := (index . 0) -}}
+	{{$type := (index . 1) -}}
+
+	type {{$name}} {{template "typeFor" $type}}
+
+	func (T *{{$name}}) Marshal(writer io.Writer) (err error) {
+		{{template "marshalFor" (list "(*T)" $type emptyMap $name 0) -}}
+		return
+	}
+
+	func (T *{{$name}}) Unmarshal(reader io.Reader) (err error) {
+		{{template "unmarshalFor" (list "(*T)" $type emptyMap $name 0) -}}
+		return
+	}
+{{end -}}
+
+{{range $name, $type := .Types -}}
+	{{if isCustomType $name -}}
+		type {{$name}} = types.{{$name}}
+	{{else if isGeneratedType $name -}}
+		{{template "allFor" (list $name $type)}}
+	{{end -}}
+{{end -}}

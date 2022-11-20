@@ -1,0 +1,13 @@
+---
+Packets:
+  Pong:
+    Id: 1
+    Struct:
+      - Name: payload
+        Type: int64
+  Response:
+    Id: 0
+    Struct:
+      - Name: json_response
+        Type: string
+        MaxLength: 32767

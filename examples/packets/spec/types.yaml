@@ -1,0 +1,250 @@
+---
+Types:
+  byte:
+    Type: uint8
+  string:
+    Slice:
+      Prefix: VarInt
+      Type: byte
+  VarInt:
+    # custom builtin type
+  VarLong:
+    # custom builtin type
+  NBT:
+    # custom builtin type
+  Chat:
+    Type: string
+  Identifier:
+    Type: string
+  Slot:
+    Optional:
+      Struct:
+        - Name: item_id
+          Type: VarInt
+        - Name: count
+          Type: byte
+        - Name: nbt
+          Type: NBT
+  Position:
+    Type: uint64
+  Angle:
+    Type: uint8
+  UUID:
+    Array:
+      Length: 16
+      Type: byte
+  BitSet:
+    Slice:
+      Prefix: VarInt
+      Type: int64
+  RegistryTags:
+    Struct:
+      - Name: type
+        Type: Identifier
+      - Name: tags
+        Slice:
+          Prefix: VarInt
+          Type: RegistryTag
+  RegistryTag:
+    Struct:
+      - Name: name
+        Type: Identifier
+      - Name: entries
+        Slice:
+          Prefix: VarInt
+          Type: VarInt
+  CommandParserDouble:
+    Struct:
+      - Name: flags
+        Type: byte
+      - Name: min
+        Type: float64
+        Default: -1.7976931348623157E307
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x01
+            - Value: 0
+      - Name: max
+        Type: float64
+        Default: 1.7976931348623157E307
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x02
+            - Value: 0
+  CommandParserFloat:
+    Struct:
+      - Name: flags
+        Type: byte
+      - Name: min
+        Type: float32
+        Default: -3.4028235E38
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x01
+            - Value: 0
+      - Name: max
+        Type: float32
+        Default: 3.4028235E38
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x02
+            - Value: 0
+  CommandParserInteger:
+    Struct:
+      - Name: flags
+        Type: byte
+      - Name: min
+        Type: int32
+        Default: -2147483648
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x01
+            - Value: 0
+      - Name: max
+        Type: int32
+        Default: 2147483647
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x02
+            - Value: 0
+  CommandParserLong:
+    Struct:
+      - Name: flags
+        Type: byte
+      - Name: min
+        Type: int64
+        Default: -9223372036854775808
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x01
+            - Value: 0
+      - Name: max
+        Type: int64
+        Default: 9223372036854775807
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x02
+            - Value: 0
+  CommandNode:
+    Struct:
+      - Name: flags
+        Type: byte
+      - Name: children
+        Slice:
+          Prefix: VarInt
+          Type: VarInt
+      - Name: redirect_node
+        Type: VarInt
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x08
+            - Value: 0
+      - Name: name
+        Type: string
+        When:
+          Or:
+            - Equal:
+                - And:
+                    - Field: flags
+                    - Value: 0x03
+                - Value: 1
+            - Equal:
+                - And:
+                    - Field: flags
+                    - Value: 0x03
+                - Value: 2
+      - Name: parser
+        Type: string
+        When:
+          Equal:
+            - And:
+                - Field: flags
+                - Value: 0x03
+            - Value: 2
+      - Name: properties
+        Enum:
+          Discriminator: parser
+          Variants:
+            "brigadier:double":
+              Type: CommandParserDouble
+            "brigadier:float":
+              Type: CommandParserFloat
+            "brigadier:integer":
+              Type: CommandParserInteger
+            "brigadier:long":
+              Type: CommandParserLong
+            "brigadier:string":
+              Type: VarInt
+            "minecraft:entity":
+              Type: byte
+            "minecraft:score_holder":
+              Type: byte
+            "minecraft:range":
+              Type: bool
+            "minecraft:resource_or_tag":
+              Type: string
+            "minecraft:resource":
+              Type: string
+      - Name: suggestions_type
+        Type: Identifier
+        When:
+          NotEqual:
+            - And:
+                - Field: flags
+                - Value: 0x10
+            - Value: 0
+  TabCompleteMatch:
+    Struct:
+      - Name: match
+        Type: string
+      - Name: tooltip
+        Optional:
+          Type: Chat
+  PalettedContainer:
+    Struct:
+      - Name: bits_per_entry
+        Type: uint8
+      - Name: single_value
+        Type: VarInt
+        When:
+          Equal:
+            - Field: bits_per_entry
+            - Value: 0
+      - Name: palette
+        Slice:
+          Prefix: VarInt
+          Type: VarInt
+        When:
+          NotEqual:
+            - Field: bits_per_entry
+            - Value: 0
+      - Name: data
+        Slice:
+          Prefix: VarInt
+          Type: int64
+  ChunkSection:
+    Struct:
+      - Name: block_count
+        Type: int16
+      - Name: block_state
+        Type: PalettedContainer
+      - Name: biomes
+        Type: PalettedContainer

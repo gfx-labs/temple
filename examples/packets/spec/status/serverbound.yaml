@@ -1,0 +1,9 @@
+---
+Packets:
+  Ping:
+    Id: 1
+    Struct:
+      - Name: payload
+        Type: int64
+  Request:
+    Id: 0

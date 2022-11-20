@@ -1,0 +1,13 @@
+---
+Packets:
+  Handshake:
+    Id: 0
+    Struct:
+      - Name: protocol_version
+        Type: VarInt
+      - Name: server_addr
+        Type: string
+      - Name: server_port
+        Type: uint16
+      - Name: next_state
+        Type: VarInt
