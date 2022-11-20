@@ -31,10 +31,11 @@ type Prayer struct {
 	FileName    string
 }
 
-func New() *Sanctum {
+func New(path string) *Sanctum {
 	return &Sanctum{
 		template: map[string]string{},
 		fm:       template.FuncMap{},
+		fs:       afero.NewBasePathFs(afero.NewOsFs(), path),
 	}
 }
 
