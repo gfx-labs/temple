@@ -55,6 +55,8 @@ var defaultFuncs = template.FuncMap{
 	"trimSuffix": strings.TrimSuffix,
 	"hasPrefix":  strings.HasPrefix,
 	"hasSuffix":  strings.HasSuffix,
+	"trim":       strings.Trim,
+	"replaceAll": strings.ReplaceAll,
 }
 
 func New(path string) *Sanctum {
