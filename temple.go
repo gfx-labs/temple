@@ -5,8 +5,13 @@ import (
 	"gfx.cafe/util/temple/lib/sanctum"
 )
 
-var t = sanctum.New(".")
 var Sanctum = t
+var t *sanctum.Sanctum
+
+func init() {
+	Sanctum = sanctum.New("./")
+	t = Sanctum
+}
 
 var curPreset preset.Preset
 

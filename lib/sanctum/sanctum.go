@@ -2,6 +2,7 @@ package sanctum
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -116,12 +117,15 @@ func (t *Sanctum) Pray() error {
 		if err != nil {
 			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
 		}
-		t.fs.MkdirAll(v.PackagePath, 0777)
+		err = t.fs.MkdirAll(v.PackagePath, 0777)
+		if err != nil {
+			log.Printf("WARNING: mkdirall failed :%s", err)
+		}
 		file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
-		defer file.Close()
 		if err != nil {
 			return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
 		}
+		defer file.Close()
 		err = file.Truncate(0)
 		if err != nil {
 			return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
