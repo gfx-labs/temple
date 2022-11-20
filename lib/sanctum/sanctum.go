@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
 )
 
@@ -31,10 +32,38 @@ type Prayer struct {
 	FileName    string
 }
 
+var defaultFuncs = template.FuncMap{
+	// list packs multiple arguments into one object (a slice)
+	// arguments can be re obtained by calling index (e.g. `index s 0`)
+	"list": func(v ...any) []any {
+		return v
+	},
+	// funcs to convert between cases
+	"lowerSnake": func(v string) string {
+		return strcase.ToSnake(v)
+	},
+	"upperSnake": func(v string) string {
+		return strcase.ToScreamingSnake(v)
+	},
+	"lowerCamel": func(v string) string {
+		return strcase.ToLowerCamel(v)
+	},
+	"upperCamel": func(v string) string {
+		return strcase.ToCamel(v)
+	},
+	// some is a helper function to detect whether a value exists.
+	// by default, doing something like `if v` where v is an int that is 0 will return false
+	// if you do `if some v`, this will always return true if v is not nil
+	// useful for getting detecting if a map key exists: `if some map.Foo`
+	"some": func(v any) bool {
+		return v != nil
+	},
+}
+
 func New(path string) *Sanctum {
 	return &Sanctum{
 		template: map[string]string{},
-		fm:       template.FuncMap{},
+		fm:       defaultFuncs,
 		fs:       afero.NewBasePathFs(afero.NewOsFs(), path),
 	}
 }
