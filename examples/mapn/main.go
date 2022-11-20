@@ -16,7 +16,7 @@ func main() {
 	temple.Prepare(&sanctum.Prayer{
 		Input: "mapn",
 		Obj: map[string]any{
-			"Count": 2,
+			"Count": 10,
 		},
 		Args:        nil,
 		PackagePath: "./maps",
