@@ -58,6 +58,7 @@ var defaultFuncs = template.FuncMap{
 	"some": func(v any) bool {
 		return v != nil
 	},
+	"repeat": strings.Repeat,
 }
 
 func New(path string) *Sanctum {
