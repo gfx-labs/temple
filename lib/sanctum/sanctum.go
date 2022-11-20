@@ -69,6 +69,10 @@ func New(path string) *Sanctum {
 	}
 }
 
+func (t *Sanctum) FS() afero.Fs {
+	return t.fs
+}
+
 func (t *Sanctum) RegisterTemplate(name string, content string) {
 	t.template[name] = content
 }
