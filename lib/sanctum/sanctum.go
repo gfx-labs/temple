@@ -39,18 +39,10 @@ var defaultFuncs = template.FuncMap{
 		return v
 	},
 	// funcs to convert between cases
-	"lowerSnake": func(v string) string {
-		return strcase.ToSnake(v)
-	},
-	"upperSnake": func(v string) string {
-		return strcase.ToScreamingSnake(v)
-	},
-	"lowerCamel": func(v string) string {
-		return strcase.ToLowerCamel(v)
-	},
-	"upperCamel": func(v string) string {
-		return strcase.ToCamel(v)
-	},
+	"lowerSnake": strcase.ToSnake,
+	"upperSnake": strcase.ToScreamingSnake,
+	"lowerCamel": strcase.ToLowerCamel,
+	"upperCamel": strcase.ToCamel,
 	// some is a helper function to detect whether a value exists.
 	// by default, doing something like `if v` where v is an int that is 0 will return false
 	// if you do `if some v`, this will always return true if v is not nil
