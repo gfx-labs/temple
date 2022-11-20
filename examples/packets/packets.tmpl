@@ -1,0 +1,46 @@
+import (
+	"gfx.cafe/etherlands/go/common/protocol/packet"
+	"gfx.cafe/etherlands/go/common/protocol/types"
+	"gfx.cafe/etherlands/go/common/protocol/registry"
+	"io"
+)
+
+var _ io.Reader
+
+{{range $name, $type := .Types -}}
+	{{if isCustomType $name -}}
+		type {{$name}} = types.{{$name}}
+	{{else if isGeneratedType $name -}}
+		type {{$name}} = registry.{{$name}}
+	{{end -}}
+{{end}}
+
+type {{.Name}} struct {}
+
+func (T {{.Name}}) PacketById(id VarInt) packet.Packet {
+	switch id {
+	{{range $name, $packet := .Packets -}}
+		case {{$packet.Id}}:
+			return new({{$name}})
+	{{end -}}
+	}
+	return nil
+}
+
+var Namespace registry.Namespace = {{.Name}}{}
+
+{{range $name, $packet := .Packets -}}
+	{{template "allFor" (list $name $packet)}}
+
+	func (T *{{$name}}) PacketId() VarInt {
+		return VarInt({{$packet.Id}})
+	}
+
+	func (T *{{$name}}) Namespace() registry.Namespace {
+		return Namespace
+	}
+
+	func (T *{{$name}}) PacketName() string {
+		return "{{$name}}"
+	}
+{{end -}}
