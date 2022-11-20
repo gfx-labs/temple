@@ -9,6 +9,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
+	"gopkg.in/yaml.v2"
 )
 
 type Sanctum struct {
@@ -72,6 +73,14 @@ func New(path string) *Sanctum {
 
 func (t *Sanctum) FS() afero.Fs {
 	return t.fs
+}
+
+func (t *Sanctum) ReadObjectFile(item any, pth ...string) error {
+	bts, err := afero.ReadFile(t.fs, path.Join(pth...))
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(bts, item)
 }
 
 func (t *Sanctum) RegisterTemplateFile(name string) {

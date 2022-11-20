@@ -14,6 +14,9 @@ func SelectPreset(p preset.Preset) {
 	curPreset = p
 }
 
+func ReadObjectFile(item any, path ...string) {
+	t.ReadObjectFile(item, path...)
+}
 func RegisterTemplateFile(name string) {
 	t.RegisterTemplateFile(name)
 }
