@@ -11,6 +11,16 @@ type Sanctum struct {
 	fm       template.FuncMap
 }
 
+func New() *Sanctum {
+	return &Sanctum{
+		template: map[string]string{},
+		fm:       template.FuncMap{},
+	}
+}
+
+func (t *Sanctum) RegisterTemplate(name string, content string) {
+	t.template[name] = content
+}
 func (t *Sanctum) RegisterFunc(s string, fn any) {
 	t.fm[s] = fn
 }
