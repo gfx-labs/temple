@@ -10,6 +10,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
+	"github.com/spf13/cast"
 	"gopkg.in/yaml.v2"
 )
 
@@ -62,14 +63,50 @@ var defaultFuncs = template.FuncMap{
 	"toLower":    strings.ToLower,
 	"toUpper":    strings.ToUpper,
 	"equalFold":  strings.EqualFold,
+	"iterate": func(counta any) []int {
+		count := cast.ToInt(counta)
+		var i int
+		var Items []int
+		for i = 0; i < (count); i++ {
+			Items = append(Items, i)
+		}
+		return Items
+	},
+	"iterateFromN": func(na any, counta any) []int {
+		n := cast.ToInt(na)
+		count := cast.ToInt(counta)
+		var i int
+		var Items []int
+		for i = n; i < (count + n); i++ {
+			Items = append(Items, i)
+		}
+		return Items
+	},
+	"iterateReverseFromN": func(na any, counta any) []int {
+		n := cast.ToInt(na)
+		count := cast.ToInt(counta)
+		var i int
+		var Items []int
+		for i = n; i < (count + n); i++ {
+			Items = append(Items, i)
+		}
+		for i2, j := 0, len(Items)-1; i2 < j; i2, j = i2+1, j-1 {
+			Items[i2], Items[j] = Items[j], Items[i2]
+		}
+		return Items
+	},
 }
 
 func New(path string) *Sanctum {
-	return &Sanctum{
+	s := &Sanctum{
 		template: map[string]string{},
 		fm:       defaultFuncs,
 		fs:       afero.NewBasePathFs(afero.NewOsFs(), path),
 	}
+	if filepath.Clean(path) == "." {
+		s.fs = afero.NewOsFs()
+	}
+	return s
 }
 
 func (t *Sanctum) FS() afero.Fs {
@@ -89,13 +126,13 @@ func (t *Sanctum) RegisterTemplateFile(name string) {
 	if err != nil {
 		return
 	}
+	name = strings.TrimSuffix(name, ".tmpl")
+	name = strings.TrimSuffix(name, ".gotmpl")
 	sbts := string(bts)
-	sbts = strings.TrimSuffix(sbts, ".tmpl")
-	sbts = strings.TrimSuffix(sbts, ".gotmpl")
-	t.template[name] = sbts
+	t.RegisterTemplate(name, sbts)
 }
 func (t *Sanctum) RegisterTemplate(name string, content string) {
-	t.template[name] = content
+	t.template[name] = strings.Trim(strings.TrimSpace(content), "\n")
 }
 
 func (t *Sanctum) RegisterFunc(s string, fn any) {
@@ -117,9 +154,9 @@ func (t *Sanctum) Pray() error {
 		if err != nil {
 			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
 		}
-		err = t.fs.MkdirAll(v.PackagePath, 0777)
+		err = t.fs.MkdirAll(v.PackagePath, 0o744)
 		if err != nil {
-			log.Printf("WARNING: mkdirall failed :%s", err)
+			log.Printf("WARNING: mkdirall failed (%s)", err)
 		}
 		file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
 		if err != nil {
@@ -143,16 +180,15 @@ func (t *Sanctum) execute(s string, obj any, args ...any) (string, error) {
 			return v
 		}
 	}
-	tmp := template.New(s).
+	tmp := template.New("current").
 		Funcs(sprig.FuncMap()).
 		Funcs(t.fm).
 		Funcs(tfm)
-	for _, v := range t.template {
-		tmp = template.Must(tmp.Parse(v))
+	for name, v := range t.template {
+		tmp = template.Must(tmp.Parse(fmt.Sprintf(`{{define "%s"}}%s{{end}}`, name, v)))
 	}
-	tmp = template.Must(tmp.Parse(t.template[s]))
 	sb := new(strings.Builder)
-	err := tmp.Execute(sb, obj)
+	err := tmp.ExecuteTemplate(sb, s, obj)
 	if err != nil {
 		return "", err
 	}

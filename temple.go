@@ -5,12 +5,10 @@ import (
 	"gfx.cafe/util/temple/lib/sanctum"
 )
 
-var Sanctum = t
-var t *sanctum.Sanctum
+var Sanctum *sanctum.Sanctum
 
 func init() {
 	Sanctum = sanctum.New("./")
-	t = Sanctum
 }
 
 var curPreset preset.Preset
@@ -20,30 +18,30 @@ func SelectPreset(p preset.Preset) {
 }
 
 func ReadObjectFile(item any, path ...string) {
-	t.ReadObjectFile(item, path...)
+	Sanctum.ReadObjectFile(item, path...)
 }
 func RegisterTemplateFile(name string) {
-	t.RegisterTemplateFile(name)
+	Sanctum.RegisterTemplateFile(name)
 }
 func RegisterTemplate(name string, content string) {
-	t.RegisterTemplate(name, content)
+	Sanctum.RegisterTemplate(name, content)
 }
 
 func RegisterFunc(s string, fn any) {
-	t.RegisterFunc(s, fn)
+	Sanctum.RegisterFunc(s, fn)
 }
 
 func RegisterFuncVar(s string, val any) {
-	t.RegisterFuncVar(s, val)
+	Sanctum.RegisterFuncVar(s, val)
 }
 
 func Prepare(p *sanctum.Prayer) {
-	t.Prepare(p)
+	Sanctum.Prepare(p)
 }
 
 func Pray() error {
 	if curPreset != nil {
-		curPreset.Bind(t)
+		curPreset.Bind(Sanctum)
 		if !curPreset.Initialized() {
 			err := curPreset.Initialize()
 			if err != nil {
@@ -52,5 +50,5 @@ func Pray() error {
 		}
 		return curPreset.Run()
 	}
-	return t.Pray()
+	return Sanctum.Pray()
 }

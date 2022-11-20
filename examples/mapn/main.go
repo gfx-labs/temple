@@ -1,6 +1,7 @@
 package main
 
 //go:generate go run .
+//go:generate cat ./maps/maps.go
 import (
 	"log"
 
@@ -10,15 +11,25 @@ import (
 
 func main() {
 	temple.RegisterTemplateFile("mapn.tmpl")
+	temple.RegisterTemplateFile("typedef.tmpl")
+	temple.RegisterTemplateFile("sync_map.gotmpl")
 	temple.Prepare(&sanctum.Prayer{
 		Input: "mapn",
 		Obj: map[string]any{
-			"Count": 3,
+			"Count": 2,
 		},
 		Args:        nil,
-		PackagePath: "maps",
+		PackagePath: "./maps",
 		PackageName: "maps",
-		FileName:    "map2.go",
+		FileName:    "maps.go",
+	})
+	temple.Prepare(&sanctum.Prayer{
+		Input:       "sync_map",
+		Obj:         nil,
+		Args:        nil,
+		PackagePath: "./maps",
+		PackageName: "maps",
+		FileName:    "sync_map.go",
 	})
 	err := temple.Pray()
 	if err != nil {

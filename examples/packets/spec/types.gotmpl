@@ -1,0 +1,1053 @@
+package packets
+
+import (
+	"gfx.cafe/etherlands/go/common/protocol/types"
+	"io"
+)
+
+var _ io.Reader
+
+type Packet interface {
+	PacketId() VarInt
+
+	Namespace() Namespace
+
+	PacketName() string
+
+	Unmarshal(r io.Reader) error
+	Marshal(w io.Writer) error
+}
+
+type Namespace interface {
+	PacketById(id VarInt) Packet
+}
+
+type Angle uint8
+
+	func (T *Angle) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalUint8(writer, uint8((*T)))
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	func (T *Angle) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp uint8
+				temp, err = types.UnmarshalUint8(reader)
+				(*T) = Angle(temp)
+			}
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	type BitSet []int64
+
+	func (T *BitSet) Marshal(writer io.Writer) (err error) {
+		{
+				length := VarInt(len((*T)))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T) {
+					err = types.MarshalInt64(writer, int64(temp0))
+		if err != nil {
+			return
+		}
+	}
+			}
+		return
+	}
+
+	func (T *BitSet) Unmarshal(reader io.Reader) (err error) {
+		{
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T) = make([]int64, int(length))
+			for temp0 := range (*T) {
+				{
+				var temp int64
+				temp, err = types.UnmarshalInt64(reader)
+				(*T)[temp0] = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+        return
+	}
+
+	type Chat string
+
+	func (T *Chat) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalString(writer, string((*T)))
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	func (T *Chat) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				(*T) = Chat(temp)
+			}
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	type ChunkSection struct {
+			BlockCount int16
+			BlockState PalettedContainer
+			Biomes PalettedContainer
+			}
+
+	func (T *ChunkSection) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalInt16(writer, int16((*T).BlockCount))
+		if err != nil {
+			return
+		}
+	err = (*T).BlockState.Marshal(writer)
+		if err != nil {
+			return
+		}
+	err = (*T).Biomes.Marshal(writer)
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	func (T *ChunkSection) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp int16
+				temp, err = types.UnmarshalInt16(reader)
+				(*T).BlockCount = (temp)
+			}
+		if err != nil {
+			return
+		}
+	err = (*T).BlockState.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	err = (*T).Biomes.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	type CommandNode struct {
+			Flags byte
+			Children []VarInt
+			RedirectNode VarInt
+			Name string
+			Parser string
+			Properties any
+			SuggestionsType Identifier
+			}
+
+	func (T *CommandNode) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalByte(writer, byte((*T).Flags))
+		if err != nil {
+			return
+		}
+	{
+				length := VarInt(len((*T).Children))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T).Children {
+					err = types.MarshalVarInt(writer, VarInt(temp0))
+		if err != nil {
+			return
+		}
+	}
+			}
+		if (((*T).Flags) & (8)) != (0) {
+			err = types.MarshalVarInt(writer, VarInt((*T).RedirectNode))
+		if err != nil {
+			return
+		}
+	}
+			if ((((*T).Flags) & (3)) == (1))||((((*T).Flags) & (3)) == (2)) {
+			err = types.MarshalString(writer, string((*T).Name))
+		if err != nil {
+			return
+		}
+	}
+			if (((*T).Flags) & (3)) == (2) {
+			err = types.MarshalString(writer, string((*T).Parser))
+		if err != nil {
+			return
+		}
+	}
+			switch (*T).Parser {
+		case "brigadier:double":
+				temp0 := (*T).Properties.(CommandParserDouble)
+            	err = temp0.Marshal(writer)
+		if err != nil {
+			return
+		}
+	case "brigadier:float":
+				temp0 := (*T).Properties.(CommandParserFloat)
+            	err = temp0.Marshal(writer)
+		if err != nil {
+			return
+		}
+	case "brigadier:integer":
+				temp0 := (*T).Properties.(CommandParserInteger)
+            	err = temp0.Marshal(writer)
+		if err != nil {
+			return
+		}
+	case "brigadier:long":
+				temp0 := (*T).Properties.(CommandParserLong)
+            	err = temp0.Marshal(writer)
+		if err != nil {
+			return
+		}
+	case "brigadier:string":
+				temp0 := (*T).Properties.(VarInt)
+            	err = types.MarshalVarInt(writer, VarInt(temp0))
+		if err != nil {
+			return
+		}
+	case "minecraft:entity":
+				temp0 := (*T).Properties.(byte)
+            	err = types.MarshalByte(writer, byte(temp0))
+		if err != nil {
+			return
+		}
+	case "minecraft:range":
+				temp0 := (*T).Properties.(bool)
+            	err = types.MarshalBool(writer, bool(temp0))
+		if err != nil {
+			return
+		}
+	case "minecraft:resource":
+				temp0 := (*T).Properties.(string)
+            	err = types.MarshalString(writer, string(temp0))
+		if err != nil {
+			return
+		}
+	case "minecraft:resource_or_tag":
+				temp0 := (*T).Properties.(string)
+            	err = types.MarshalString(writer, string(temp0))
+		if err != nil {
+			return
+		}
+	case "minecraft:score_holder":
+				temp0 := (*T).Properties.(byte)
+            	err = types.MarshalByte(writer, byte(temp0))
+		if err != nil {
+			return
+		}
+	}
+	if (((*T).Flags) & (16)) != (0) {
+			err = (*T).SuggestionsType.Marshal(writer)
+		if err != nil {
+			return
+		}
+	}
+			return
+	}
+
+	func (T *CommandNode) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*T).Flags = (temp)
+			}
+		if err != nil {
+			return
+		}
+	{
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T).Children = make([]VarInt, int(length))
+			for temp0 := range (*T).Children {
+				{
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*T).Children[temp0] = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+        if (((*T).Flags) & (8)) != (0) {
+            {
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*T).RedirectNode = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if ((((*T).Flags) & (3)) == (1))||((((*T).Flags) & (3)) == (2)) {
+            {
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				(*T).Name = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if (((*T).Flags) & (3)) == (2) {
+            {
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				(*T).Parser = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            switch (*T).Parser {
+        case "brigadier:double":
+				var temp0 CommandParserDouble
+            	err = temp0.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "brigadier:float":
+				var temp0 CommandParserFloat
+            	err = temp0.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "brigadier:integer":
+				var temp0 CommandParserInteger
+            	err = temp0.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "brigadier:long":
+				var temp0 CommandParserLong
+            	err = temp0.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "brigadier:string":
+				var temp0 VarInt
+            	{
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "minecraft:entity":
+				var temp0 byte
+            	{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "minecraft:range":
+				var temp0 bool
+            	{
+				var temp bool
+				temp, err = types.UnmarshalBool(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "minecraft:resource":
+				var temp0 string
+            	{
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "minecraft:resource_or_tag":
+				var temp0 string
+            	{
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        case "minecraft:score_holder":
+				var temp0 byte
+            	{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				temp0 = (temp)
+			}
+		if err != nil {
+			return
+		}
+	(*T).Properties = temp0
+        }
+	if (((*T).Flags) & (16)) != (0) {
+            err = (*T).SuggestionsType.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	}
+            return
+	}
+
+	type CommandParserDouble struct {
+			Flags byte
+			Min float64
+			Max float64
+			}
+
+	func (T *CommandParserDouble) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalByte(writer, byte((*T).Flags))
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+			err = types.MarshalFloat64(writer, float64((*T).Min))
+		if err != nil {
+			return
+		}
+	}
+			if (((*T).Flags) & (2)) != (0) {
+			err = types.MarshalFloat64(writer, float64((*T).Max))
+		if err != nil {
+			return
+		}
+	}
+			return
+	}
+
+	func (T *CommandParserDouble) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*T).Flags = (temp)
+			}
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+            {
+				var temp float64
+				temp, err = types.UnmarshalFloat64(reader)
+				(*T).Min = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if (((*T).Flags) & (2)) != (0) {
+            {
+				var temp float64
+				temp, err = types.UnmarshalFloat64(reader)
+				(*T).Max = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            return
+	}
+
+	type CommandParserFloat struct {
+			Flags byte
+			Min float32
+			Max float32
+			}
+
+	func (T *CommandParserFloat) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalByte(writer, byte((*T).Flags))
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+			err = types.MarshalFloat32(writer, float32((*T).Min))
+		if err != nil {
+			return
+		}
+	}
+			if (((*T).Flags) & (2)) != (0) {
+			err = types.MarshalFloat32(writer, float32((*T).Max))
+		if err != nil {
+			return
+		}
+	}
+			return
+	}
+
+	func (T *CommandParserFloat) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*T).Flags = (temp)
+			}
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+            {
+				var temp float32
+				temp, err = types.UnmarshalFloat32(reader)
+				(*T).Min = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if (((*T).Flags) & (2)) != (0) {
+            {
+				var temp float32
+				temp, err = types.UnmarshalFloat32(reader)
+				(*T).Max = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            return
+	}
+
+	type CommandParserInteger struct {
+			Flags byte
+			Min int32
+			Max int32
+			}
+
+	func (T *CommandParserInteger) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalByte(writer, byte((*T).Flags))
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+			err = types.MarshalInt32(writer, int32((*T).Min))
+		if err != nil {
+			return
+		}
+	}
+			if (((*T).Flags) & (2)) != (0) {
+			err = types.MarshalInt32(writer, int32((*T).Max))
+		if err != nil {
+			return
+		}
+	}
+			return
+	}
+
+	func (T *CommandParserInteger) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*T).Flags = (temp)
+			}
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+            {
+				var temp int32
+				temp, err = types.UnmarshalInt32(reader)
+				(*T).Min = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if (((*T).Flags) & (2)) != (0) {
+            {
+				var temp int32
+				temp, err = types.UnmarshalInt32(reader)
+				(*T).Max = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            return
+	}
+
+	type CommandParserLong struct {
+			Flags byte
+			Min int64
+			Max int64
+			}
+
+	func (T *CommandParserLong) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalByte(writer, byte((*T).Flags))
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+			err = types.MarshalInt64(writer, int64((*T).Min))
+		if err != nil {
+			return
+		}
+	}
+			if (((*T).Flags) & (2)) != (0) {
+			err = types.MarshalInt64(writer, int64((*T).Max))
+		if err != nil {
+			return
+		}
+	}
+			return
+	}
+
+	func (T *CommandParserLong) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*T).Flags = (temp)
+			}
+		if err != nil {
+			return
+		}
+	if (((*T).Flags) & (1)) != (0) {
+            {
+				var temp int64
+				temp, err = types.UnmarshalInt64(reader)
+				(*T).Min = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if (((*T).Flags) & (2)) != (0) {
+            {
+				var temp int64
+				temp, err = types.UnmarshalInt64(reader)
+				(*T).Max = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            return
+	}
+
+	type Identifier string
+
+	func (T *Identifier) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalString(writer, string((*T)))
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	func (T *Identifier) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				(*T) = Identifier(temp)
+			}
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	type NBT = types.NBT
+	type PalettedContainer struct {
+			BitsPerEntry uint8
+			SingleValue VarInt
+			Palette []VarInt
+			Data []int64
+			}
+
+	func (T *PalettedContainer) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalUint8(writer, uint8((*T).BitsPerEntry))
+		if err != nil {
+			return
+		}
+	if ((*T).BitsPerEntry) == (0) {
+			err = types.MarshalVarInt(writer, VarInt((*T).SingleValue))
+		if err != nil {
+			return
+		}
+	}
+			if ((*T).BitsPerEntry) != (0) {
+			{
+				length := VarInt(len((*T).Palette))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T).Palette {
+					err = types.MarshalVarInt(writer, VarInt(temp0))
+		if err != nil {
+			return
+		}
+	}
+			}
+		}
+			{
+				length := VarInt(len((*T).Data))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T).Data {
+					err = types.MarshalInt64(writer, int64(temp0))
+		if err != nil {
+			return
+		}
+	}
+			}
+		return
+	}
+
+	func (T *PalettedContainer) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp uint8
+				temp, err = types.UnmarshalUint8(reader)
+				(*T).BitsPerEntry = (temp)
+			}
+		if err != nil {
+			return
+		}
+	if ((*T).BitsPerEntry) == (0) {
+            {
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*T).SingleValue = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+            if ((*T).BitsPerEntry) != (0) {
+            {
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T).Palette = make([]VarInt, int(length))
+			for temp0 := range (*T).Palette {
+				{
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*T).Palette[temp0] = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+        }
+            {
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T).Data = make([]int64, int(length))
+			for temp0 := range (*T).Data {
+				{
+				var temp int64
+				temp, err = types.UnmarshalInt64(reader)
+				(*T).Data[temp0] = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+        return
+	}
+
+	type Position uint64
+
+	func (T *Position) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalUint64(writer, uint64((*T)))
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	func (T *Position) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp uint64
+				temp, err = types.UnmarshalUint64(reader)
+				(*T) = Position(temp)
+			}
+		if err != nil {
+			return
+		}
+	return
+	}
+
+	type RegistryTag struct {
+			Name Identifier
+			Entries []VarInt
+			}
+
+	func (T *RegistryTag) Marshal(writer io.Writer) (err error) {
+		err = (*T).Name.Marshal(writer)
+		if err != nil {
+			return
+		}
+	{
+				length := VarInt(len((*T).Entries))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T).Entries {
+					err = types.MarshalVarInt(writer, VarInt(temp0))
+		if err != nil {
+			return
+		}
+	}
+			}
+		return
+	}
+
+	func (T *RegistryTag) Unmarshal(reader io.Reader) (err error) {
+		err = (*T).Name.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	{
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T).Entries = make([]VarInt, int(length))
+			for temp0 := range (*T).Entries {
+				{
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*T).Entries[temp0] = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+        return
+	}
+
+	type RegistryTags struct {
+			Type Identifier
+			Tags []RegistryTag
+			}
+
+	func (T *RegistryTags) Marshal(writer io.Writer) (err error) {
+		err = (*T).Type.Marshal(writer)
+		if err != nil {
+			return
+		}
+	{
+				length := VarInt(len((*T).Tags))
+				err = types.MarshalVarInt(writer, length)
+				if err != nil {
+					return
+				}
+				for _, temp0 := range (*T).Tags {
+					err = temp0.Marshal(writer)
+		if err != nil {
+			return
+		}
+	}
+			}
+		return
+	}
+
+	func (T *RegistryTags) Unmarshal(reader io.Reader) (err error) {
+		err = (*T).Type.Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	{
+			var length VarInt
+				length, err = types.UnmarshalVarInt(reader)
+			if err != nil {
+				return
+			}
+			(*T).Tags = make([]RegistryTag, int(length))
+			for temp0 := range (*T).Tags {
+				err = (*T).Tags[temp0].Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	}
+		}
+        return
+	}
+
+	type Slot struct {
+			inner *struct {
+			ItemId VarInt
+			Count byte
+			Nbt NBT
+			}
+		}
+
+	func (T *Slot) Marshal(writer io.Writer) (err error) {
+		if (*T).inner == nil {
+			err = types.MarshalBool(writer, false)
+			if err != nil {
+				return
+			}
+		} else {
+			err = types.MarshalBool(writer, true)
+			if err != nil {
+				return
+			}
+			err = types.MarshalVarInt(writer, VarInt((*(*T).inner).ItemId))
+		if err != nil {
+			return
+		}
+	err = types.MarshalByte(writer, byte((*(*T).inner).Count))
+		if err != nil {
+			return
+		}
+	err = types.MarshalNBT(writer, NBT((*(*T).inner).Nbt))
+		if err != nil {
+			return
+		}
+	}
+	return
+	}
+
+	func (T *Slot) Unmarshal(reader io.Reader) (err error) {
+		{
+			var exists bool
+			exists, err = types.UnmarshalBool(reader)
+			if err != nil {
+				return
+			}
+			if exists {
+				(*T).inner = new(struct {
+			ItemId VarInt
+			Count byte
+			Nbt NBT
+			})
+				{
+				var temp VarInt
+				temp, err = types.UnmarshalVarInt(reader)
+				(*(*T).inner).ItemId = (temp)
+			}
+		if err != nil {
+			return
+		}
+	{
+				var temp byte
+				temp, err = types.UnmarshalByte(reader)
+				(*(*T).inner).Count = (temp)
+			}
+		if err != nil {
+			return
+		}
+	{
+				var temp NBT
+				temp, err = types.UnmarshalNBT(reader)
+				(*(*T).inner).Nbt = (temp)
+			}
+		if err != nil {
+			return
+		}
+	}
+		}
+	return
+	}
+
+	type TabCompleteMatch struct {
+			Match string
+			Tooltip struct {
+			inner *Chat
+		}
+			}
+
+	func (T *TabCompleteMatch) Marshal(writer io.Writer) (err error) {
+		err = types.MarshalString(writer, string((*T).Match))
+		if err != nil {
+			return
+		}
+	if (*T).Tooltip.inner == nil {
+			err = types.MarshalBool(writer, false)
+			if err != nil {
+				return
+			}
+		} else {
+			err = types.MarshalBool(writer, true)
+			if err != nil {
+				return
+			}
+			err = (*(*T).Tooltip.inner).Marshal(writer)
+		if err != nil {
+			return
+		}
+	}
+	return
+	}
+
+	func (T *TabCompleteMatch) Unmarshal(reader io.Reader) (err error) {
+		{
+				var temp string
+				temp, err = types.UnmarshalString(reader)
+				(*T).Match = (temp)
+			}
+		if err != nil {
+			return
+		}
+	{
+			var exists bool
+			exists, err = types.UnmarshalBool(reader)
+			if err != nil {
+				return
+			}
+			if exists {
+				(*T).Tooltip.inner = new(Chat)
+				err = (*(*T).Tooltip.inner).Unmarshal(reader)
+		if err != nil {
+			return
+		}
+	}
+		}
+	return
+	}
+
+	type UUID = types.UUID
+	type VarInt = types.VarInt
+	type VarLong = types.VarLong
+	

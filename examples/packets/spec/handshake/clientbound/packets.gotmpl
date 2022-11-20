@@ -1,0 +1,43 @@
+package handshake_clientbound
+
+import (
+	"gfx.cafe/etherlands/go/common/protocol/packet"
+	"gfx.cafe/etherlands/go/common/protocol/types"
+	"gfx.cafe/etherlands/go/common/protocol/registry"
+	"io"
+)
+
+var _ io.Reader
+
+type Angle = registry.Angle
+	type BitSet = registry.BitSet
+	type Chat = registry.Chat
+	type ChunkSection = registry.ChunkSection
+	type CommandNode = registry.CommandNode
+	type CommandParserDouble = registry.CommandParserDouble
+	type CommandParserFloat = registry.CommandParserFloat
+	type CommandParserInteger = registry.CommandParserInteger
+	type CommandParserLong = registry.CommandParserLong
+	type Identifier = registry.Identifier
+	type NBT = types.NBT
+	type PalettedContainer = registry.PalettedContainer
+	type Position = registry.Position
+	type RegistryTag = registry.RegistryTag
+	type RegistryTags = registry.RegistryTags
+	type Slot = registry.Slot
+	type TabCompleteMatch = registry.TabCompleteMatch
+	type UUID = types.UUID
+	type VarInt = types.VarInt
+	type VarLong = types.VarLong
+	
+
+type HandshakeClientbound struct {}
+
+func (T HandshakeClientbound) PacketById(id VarInt) packet.Packet {
+	switch id {
+	}
+	return nil
+}
+
+var Namespace registry.Namespace = HandshakeClientbound{}
+

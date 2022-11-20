@@ -1,7 +1,30 @@
+import (
+)
 
-
-import {
-  "sync"
+{{range $curCount := iterateFromN 1 .Count}}
+type Map{{add 1 $curCount}}[{{range $val := (iterateFromN 0 (add 1 $curCount)) }}K{{$val}} comparable, {{end}}V any] struct {
+  inner Map1[K0, Map{{$curCount}}[{{range $val := iterate $curCount}}K{{add $val 1}},{{end}}V]]
 }
 
-type Map{{.Count}}
+func (m *{{template "typedef" $curCount}}) Load(key K0) (value Map{{.}}[{{range $val := (iterateFromN 1 .) }}K{{$val}}, {{end}}V], ok bool) {
+  return m.inner.Load(key)
+}
+
+{{range $subCurCount:= iterateFromN 1 $curCount}}
+
+func (m *{{template "typedef" $curCount}}) Load{{$subCurCount}}({{range $val := (iterateFromN 0 (add 1 $subCurCount)) }}k{{$val}} K{{$val}}, {{end}}
+) (value {{if (gt (sub $curCount $subCurCount) 0)}} Map{{sub $curCount $subCurCount}}[{{range $val := (iterateFromN (add 1 $subCurCount) (sub $curCount .)) }}K{{$val}}, {{end}}V] {{else}}V{{end}}, ok bool) {
+  item0 := m.inner
+{{range $val := (iterateFromN 1 ($subCurCount)) }}
+  var item{{$val}}  Map{{add 1 (sub $curCount .)}}[{{range $val := (iterateFromN $val (add 1 (sub $curCount .))) }}K{{$val}}, {{end}}V]
+  item{{$val}}, ok = item{{sub $val 1}}.Load(k{{sub $val 1}})
+  if !ok {
+    return
+  }
+{{end}}
+  return item{{$subCurCount}}.Load(k{{$subCurCount}})
+}
+{{end}}
+
+{{end}}
+
