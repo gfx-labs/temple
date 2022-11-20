@@ -74,6 +74,16 @@ func (t *Sanctum) FS() afero.Fs {
 	return t.fs
 }
 
+func (t *Sanctum) RegisterTemplateFile(name string) {
+	bts, err := afero.ReadFile(t.fs, name)
+	if err != nil {
+		return
+	}
+	sbts := string(bts)
+	sbts = strings.TrimSuffix(sbts, ".tmpl")
+	sbts = strings.TrimSuffix(sbts, ".gotmpl")
+	t.template[name] = sbts
+}
 func (t *Sanctum) RegisterTemplate(name string, content string) {
 	t.template[name] = content
 }
