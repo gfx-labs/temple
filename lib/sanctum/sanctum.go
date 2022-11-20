@@ -2,16 +2,33 @@ package sanctum
 
 import (
 	"fmt"
+	"path"
 	"strings"
 	"text/template"
+
+	"github.com/spf13/afero"
 )
 
 type Sanctum struct {
 	template map[string]string
 	fm       template.FuncMap
+
+	foyer Foyer
+	fs    afero.Fs
 }
 
 type Foyer struct {
+	Prayers []Prayer
+}
+
+type Prayer struct {
+	Input string
+	Obj   any
+	Args  []any
+
+	PackagePath string
+	PackageName string
+	FileName    string
 }
 
 func New() *Sanctum {
@@ -33,8 +50,34 @@ func (t *Sanctum) RegisterFuncVar(s string, val any) {
 		return val
 	}
 }
+func (t *Sanctum) Prepare(p *Prayer) {
+	if p != nil {
+		t.foyer.Prayers = append(t.foyer.Prayers, *p)
+	}
+}
+func (t *Sanctum) Pray() error {
+	for _, v := range t.foyer.Prayers {
+		output, err := t.execute(v.Input, v.Obj, v.Args...)
+		if err != nil {
+			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+		}
+		t.fs.MkdirAll(v.PackagePath, 0755)
+		file, err := t.fs.Open(path.Join(v.PackagePath, v.FileName))
+		defer file.Close()
+		if err != nil {
+			return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+		}
+		err = file.Truncate(0)
+		if err != nil {
+			return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+		}
+		file.WriteString(fmt.Sprintf("package %s\n\n", v.PackageName))
+		file.WriteString(output)
+	}
+	return nil
+}
 
-func (t *Sanctum) Execute(s string, obj any, args ...any) (string, error) {
+func (t *Sanctum) execute(s string, obj any, args ...any) (string, error) {
 	tfm := make(template.FuncMap)
 	for k, v := range args {
 		tfm[fmt.Sprintf("arg%d", k)] = func() any {

@@ -2,7 +2,6 @@ module gfx.cafe/util/temple
 
 go 1.19
 
-require (
-	gopkg.in/yaml.v2 v2.4.0 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
-)
+require github.com/spf13/afero v1.9.3
+
+require golang.org/x/text v0.3.4 // indirect
