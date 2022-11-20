@@ -98,7 +98,7 @@ func (t *Sanctum) Pray() error {
 			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
 		}
 		t.fs.MkdirAll(v.PackagePath, 0777)
-		file, err := t.fs.Open(path.Join(v.PackagePath, v.FileName))
+		file, err := t.fs.Create(path.Join(v.PackagePath, v.FileName))
 		defer file.Close()
 		if err != nil {
 			return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
