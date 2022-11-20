@@ -3,13 +3,15 @@ package main
 import (
 	"embed"
 	"fmt"
-	"gfx.cafe/util/temple/lib/sanctum"
-	"github.com/iancoleman/strcase"
 	"io/fs"
 	"path/filepath"
+
+	"gfx.cafe/util/temple/lib/sanctum"
+	"github.com/iancoleman/strcase"
 	"sigs.k8s.io/yaml"
 )
 
+//go:generate go run .
 const (
 	OUTPUT = "./out/packets"
 )
