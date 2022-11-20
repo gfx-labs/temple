@@ -1,20 +1,16 @@
 package main
 
 import (
-	"embed"
+	_ "embed"
 	"fmt"
-	"io/fs"
-	"path/filepath"
-
 	"gfx.cafe/util/temple/lib/sanctum"
 	"github.com/iancoleman/strcase"
-	"sigs.k8s.io/yaml"
+	"github.com/spf13/afero"
+	"io/fs"
+	"path/filepath"
 )
 
 //go:generate go run .
-const (
-	OUTPUT = "./out/packets"
-)
 
 //go:embed packets.tmpl
 var packetsTmpl string
@@ -22,16 +18,13 @@ var packetsTmpl string
 //go:embed types.tmpl
 var typesTmpl string
 
-//go:embed spec
-var input embed.FS
-
 func removeExt(v string) string {
 	ext := filepath.Ext(v)
 	return v[:len(v)-len(ext)]
 }
 
 func main() {
-	t := sanctum.New(OUTPUT)
+	t := sanctum.New("./spec")
 	t.RegisterTemplate("packets", packetsTmpl)
 	t.RegisterTemplate("types", typesTmpl)
 	t.RegisterFunc(
@@ -85,59 +78,50 @@ func main() {
 		"add", func(a, b int) int {
 			return a + b
 		})
-	typesFile, err := input.ReadFile("spec/types.yaml")
-	if err != nil {
-		panic(err)
-	}
-	var types map[string]any
-	err = yaml.Unmarshal(typesFile, &types)
+
+	var ty map[string]any
+	err := t.ReadObjectFile(&ty, "types.yaml")
 	t.Prepare(&sanctum.Prayer{
 		Input: "types",
-		Obj:   types,
+		Obj:   ty,
 
 		PackageName: "packets",
 		FileName:    "types.go",
 	})
 
-	var states []fs.DirEntry
-	states, err = input.ReadDir("spec")
+	err = afero.Walk(t.FS(), "", func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || path == "types.yaml" {
+			return nil
+		}
+
+		var v map[string]any
+		err = t.ReadObjectFile(&v, path)
+		if err != nil {
+			return err
+		}
+
+		stateName := filepath.Dir(path)
+		directionName := removeExt(filepath.Base(path))
+
+		v["Types"] = ty["Types"]
+		v["Name"] = strcase.ToCamel(fmt.Sprintf("%s_%s", stateName, directionName))
+
+		t.Prepare(&sanctum.Prayer{
+			Input: "packets",
+			Obj:   v,
+
+			PackagePath: filepath.Join(stateName, directionName),
+			PackageName: stateName + "_" + directionName,
+			FileName:    "packets.go",
+		})
+
+		return nil
+	})
 	if err != nil {
 		panic(err)
-	}
-
-	for _, state := range states {
-		if !state.IsDir() {
-			continue
-		}
-		var directions []fs.DirEntry
-		directions, err = input.ReadDir(filepath.Join("spec", state.Name()))
-		for _, direction := range directions {
-			directionName := removeExt(direction.Name())
-
-			var packetsFile []byte
-			packetsFile, err = input.ReadFile(filepath.Join("spec", state.Name(), direction.Name()))
-			if err != nil {
-				panic(err)
-			}
-
-			var packets map[string]any
-			err = yaml.Unmarshal(packetsFile, &packets)
-			if err != nil {
-				panic(err)
-			}
-
-			packets["Types"] = types["Types"]
-			packets["Name"] = strcase.ToCamel(fmt.Sprintf("%s_%s", state.Name(), directionName))
-
-			t.Prepare(&sanctum.Prayer{
-				Input: "packets",
-				Obj:   packets,
-
-				PackagePath: filepath.Join(state.Name(), directionName),
-				PackageName: state.Name() + "_" + directionName,
-				FileName:    "packets.go",
-			})
-		}
 	}
 
 	err = t.Pray()
