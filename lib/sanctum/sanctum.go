@@ -59,6 +59,7 @@ var defaultFuncs = template.FuncMap{
 	"replaceAll": strings.ReplaceAll,
 	"toLower":    strings.ToLower,
 	"toUpper":    strings.ToUpper,
+	"equalFold":  strings.EqualFold,
 }
 
 func New(path string) *Sanctum {
