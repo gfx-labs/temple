@@ -1,0 +1,11 @@
+{{$count := (index . 0) -}}
+{{$offset := (index . 1) -}}
+{{if eq $count -1 -}}
+    V
+{{- else -}}
+    Map{{add 1 $count}}[
+    {{- range $val := iterateFromN $offset (add 1 $count) -}}
+        K{{$val}},
+    {{- end -}}
+    V]
+{{- end -}}

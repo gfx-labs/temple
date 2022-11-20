@@ -8,8 +8,20 @@ type Map2[K0 comparable, K1 comparable, V any] struct {
   inner Map1[K0, Map1[K1,V]]
 }
 
-func (m *Map2[K0, K1, V]) Load(key K0) (value Map1[K1, V], ok bool) {
+func (m *Map2[K0, K1, V]) Load(key K0) (value Map1[K1,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map2[K0, K1, V]) LoadAndDelete(key K0) (value Map1[K1,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map2[K0, K1, V]) LoadOrStore(key K0, v Map1[K1,V]) (value Map1[K1,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map2[K0, K1, V]) Store(key K0, value Map1[K1,V]) {
+  m.inner.store(key, value)
 }
 
 
@@ -18,13 +30,46 @@ func (m *Map2[K0, K1, V]) Load1(k0 K0, k1 K1,
 ) (value V, ok bool) {
   item0 := m.inner
 
-  var item1  Map1[K1, V]
+  var item1  Map1[K0,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
   return item1.Load(k1)
+}
+
+func (m *Map2[K0, K1, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map1[K0,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map2[K0, K1, V]) LoadOrStore1(k0 K0, k1 K1, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map1[K0,V]
+  item1, _ = item0.LoadOrStore(k0, Map1[K0,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map2[K0, K1, V]) Store1(k0 K0, k1 K1, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map1[K0,V]
+  item1, _ = item0.LoadOrStore(k0, Map1[K0,V]{})
+
+  item1.Store(k1, value)
 }
 
 
@@ -33,17 +78,29 @@ type Map3[K0 comparable, K1 comparable, K2 comparable, V any] struct {
   inner Map1[K0, Map2[K1,K2,V]]
 }
 
-func (m *Map3[K0, K1, K2, V]) Load(key K0) (value Map2[K1, K2, V], ok bool) {
+func (m *Map3[K0, K1, K2, V]) Load(key K0) (value Map2[K1,K2,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map3[K0, K1, K2, V]) LoadAndDelete(key K0) (value Map2[K1,K2,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map3[K0, K1, K2, V]) LoadOrStore(key K0, v Map2[K1,K2,V]) (value Map2[K1,K2,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map3[K0, K1, K2, V]) Store(key K0, value Map2[K1,K2,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map3[K0, K1, K2, V]) Load1(k0 K0, k1 K1, 
-) (value  Map1[K2, V] , ok bool) {
+) (value Map1[K2,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map2[K1, K2, V]
+  var item1  Map2[K1,K2,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -52,24 +109,102 @@ func (m *Map3[K0, K1, K2, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map3[K0, K1, K2, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value V, ok bool) {
+func (m *Map3[K0, K1, K2, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map1[K2,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map2[K1, K2, V]
+  var item1  Map2[K1,K2,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map1[K2, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map3[K0, K1, K2, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map1[K2,V]) (value Map1[K2,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map2[K1,K2,V]
+  item1, _ = item0.LoadOrStore(k0, Map2[K1,K2,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map3[K0, K1, K2, V]) Store1(k0 K0, k1 K1, 
+value Map1[K2,V]) {
+  item0 := m.inner
+
+  var item1 Map2[K1,K2,V]
+  item1, _ = item0.LoadOrStore(k0, Map2[K1,K2,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map3[K0, K1, K2, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map2[K1,K2,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map1[K0,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
   return item2.Load(k2)
+}
+
+func (m *Map3[K0, K1, K2, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map2[K1,K2,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map1[K0,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map3[K0, K1, K2, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map2[K1,K2,V]
+  item1, _ = item0.LoadOrStore(k0, Map2[K1,K2,V]{})
+
+  var item2 Map1[K0,V]
+  item2, _ = item1.LoadOrStore(k1, Map1[K0,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map3[K0, K1, K2, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map2[K1,K2,V]
+  item1, _ = item0.LoadOrStore(k0, Map2[K1,K2,V]{})
+
+  var item2 Map1[K0,V]
+  item2, _ = item1.LoadOrStore(k1, Map1[K0,V]{})
+
+  item2.Store(k2, value)
 }
 
 
@@ -78,17 +213,29 @@ type Map4[K0 comparable, K1 comparable, K2 comparable, K3 comparable, V any] str
   inner Map1[K0, Map3[K1,K2,K3,V]]
 }
 
-func (m *Map4[K0, K1, K2, K3, V]) Load(key K0) (value Map3[K1, K2, K3, V], ok bool) {
+func (m *Map4[K0, K1, K2, K3, V]) Load(key K0) (value Map3[K1,K2,K3,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadAndDelete(key K0) (value Map3[K1,K2,K3,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadOrStore(key K0, v Map3[K1,K2,K3,V]) (value Map3[K1,K2,K3,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) Store(key K0, value Map3[K1,K2,K3,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map4[K0, K1, K2, K3, V]) Load1(k0 K0, k1 K1, 
-) (value  Map2[K2, K3, V] , ok bool) {
+) (value Map2[K2,K3,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map3[K1, K2, K3, V]
+  var item1  Map3[K2,K3,K4,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -97,18 +244,51 @@ func (m *Map4[K0, K1, K2, K3, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map4[K0, K1, K2, K3, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map1[K3, V] , ok bool) {
+func (m *Map4[K0, K1, K2, K3, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map2[K2,K3,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map3[K1, K2, K3, V]
+  var item1  Map3[K2,K3,K4,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map2[K2, K3, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map2[K2,K3,V]) (value Map2[K2,K3,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) Store1(k0 K0, k1 K1, 
+value Map2[K2,K3,V]) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map4[K0, K1, K2, K3, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map1[K3,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map3[K2,K3,K4,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map2[K1,K2,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -117,30 +297,132 @@ func (m *Map4[K0, K1, K2, K3, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map4[K0, K1, K2, K3, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value V, ok bool) {
+func (m *Map4[K0, K1, K2, K3, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map1[K3,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map3[K1, K2, K3, V]
+  var item1  Map3[K2,K3,K4,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map2[K2, K3, V]
+  var item2  Map2[K1,K2,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map1[K3, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map1[K3,V]) (value Map1[K3,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  var item2 Map2[K1,K2,V]
+  item2, _ = item1.LoadOrStore(k1, Map2[K1,K2,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map1[K3,V]) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  var item2 Map2[K1,K2,V]
+  item2, _ = item1.LoadOrStore(k1, Map2[K1,K2,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map4[K0, K1, K2, K3, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map3[K2,K3,K4,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map2[K1,K2,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map1[K0,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
   return item3.Load(k3)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map3[K2,K3,K4,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map2[K1,K2,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map1[K0,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  var item2 Map2[K1,K2,V]
+  item2, _ = item1.LoadOrStore(k1, Map2[K1,K2,V]{})
+
+  var item3 Map1[K0,V]
+  item3, _ = item2.LoadOrStore(k2, Map1[K0,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map4[K0, K1, K2, K3, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map3[K2,K3,K4,V]
+  item1, _ = item0.LoadOrStore(k0, Map3[K2,K3,K4,V]{})
+
+  var item2 Map2[K1,K2,V]
+  item2, _ = item1.LoadOrStore(k1, Map2[K1,K2,V]{})
+
+  var item3 Map1[K0,V]
+  item3, _ = item2.LoadOrStore(k2, Map1[K0,V]{})
+
+  item3.Store(k3, value)
 }
 
 
@@ -149,17 +431,29 @@ type Map5[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compara
   inner Map1[K0, Map4[K1,K2,K3,K4,V]]
 }
 
-func (m *Map5[K0, K1, K2, K3, K4, V]) Load(key K0) (value Map4[K1, K2, K3, K4, V], ok bool) {
+func (m *Map5[K0, K1, K2, K3, K4, V]) Load(key K0) (value Map4[K1,K2,K3,K4,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadAndDelete(key K0) (value Map4[K1,K2,K3,K4,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadOrStore(key K0, v Map4[K1,K2,K3,K4,V]) (value Map4[K1,K2,K3,K4,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Store(key K0, value Map4[K1,K2,K3,K4,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map5[K0, K1, K2, K3, K4, V]) Load1(k0 K0, k1 K1, 
-) (value  Map3[K2, K3, K4, V] , ok bool) {
+) (value Map3[K2,K3,K4,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map4[K1, K2, K3, K4, V]
+  var item1  Map4[K3,K4,K5,K6,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -168,18 +462,51 @@ func (m *Map5[K0, K1, K2, K3, K4, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map5[K0, K1, K2, K3, K4, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map2[K3, K4, V] , ok bool) {
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map3[K2,K3,K4,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map4[K1, K2, K3, K4, V]
+  var item1  Map4[K3,K4,K5,K6,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map3[K2, K3, K4, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map3[K2,K3,K4,V]) (value Map3[K2,K3,K4,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Store1(k0 K0, k1 K1, 
+value Map3[K2,K3,K4,V]) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map2[K3,K4,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map4[K3,K4,K5,K6,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map3[K2,K3,K4,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -188,24 +515,69 @@ func (m *Map5[K0, K1, K2, K3, K4, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map5[K0, K1, K2, K3, K4, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map1[K4, V] , ok bool) {
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map2[K3,K4,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map4[K1, K2, K3, K4, V]
+  var item1  Map4[K3,K4,K5,K6,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map3[K2, K3, K4, V]
+  var item2  Map3[K2,K3,K4,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map2[K3, K4, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map2[K3,K4,V]) (value Map2[K3,K4,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map2[K3,K4,V]) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map1[K4,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map4[K3,K4,K5,K6,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map3[K2,K3,K4,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map2[K1,K2,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -214,36 +586,162 @@ func (m *Map5[K0, K1, K2, K3, K4, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3,
   return item3.Load(k3)
 }
 
-
-func (m *Map5[K0, K1, K2, K3, K4, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value V, ok bool) {
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map1[K4,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map4[K1, K2, K3, K4, V]
+  var item1  Map4[K3,K4,K5,K6,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map3[K2, K3, K4, V]
+  var item2  Map3[K2,K3,K4,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map2[K3, K4, V]
+  var item3  Map2[K1,K2,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map1[K4, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map1[K4,V]) (value Map1[K4,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  var item3 Map2[K1,K2,V]
+  item3, _ = item2.LoadOrStore(k2, Map2[K1,K2,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map1[K4,V]) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  var item3 Map2[K1,K2,V]
+  item3, _ = item2.LoadOrStore(k2, Map2[K1,K2,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map4[K3,K4,K5,K6,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map3[K2,K3,K4,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map2[K1,K2,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map1[K0,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
   return item4.Load(k4)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map4[K3,K4,K5,K6,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map3[K2,K3,K4,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map2[K1,K2,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map1[K0,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  var item3 Map2[K1,K2,V]
+  item3, _ = item2.LoadOrStore(k2, Map2[K1,K2,V]{})
+
+  var item4 Map1[K0,V]
+  item4, _ = item3.LoadOrStore(k3, Map1[K0,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map5[K0, K1, K2, K3, K4, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map4[K3,K4,K5,K6,V]
+  item1, _ = item0.LoadOrStore(k0, Map4[K3,K4,K5,K6,V]{})
+
+  var item2 Map3[K2,K3,K4,V]
+  item2, _ = item1.LoadOrStore(k1, Map3[K2,K3,K4,V]{})
+
+  var item3 Map2[K1,K2,V]
+  item3, _ = item2.LoadOrStore(k2, Map2[K1,K2,V]{})
+
+  var item4 Map1[K0,V]
+  item4, _ = item3.LoadOrStore(k3, Map1[K0,V]{})
+
+  item4.Store(k4, value)
 }
 
 
@@ -252,17 +750,29 @@ type Map6[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compara
   inner Map1[K0, Map5[K1,K2,K3,K4,K5,V]]
 }
 
-func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load(key K0) (value Map5[K1, K2, K3, K4, K5, V], ok bool) {
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load(key K0) (value Map5[K1,K2,K3,K4,K5,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete(key K0) (value Map5[K1,K2,K3,K4,K5,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore(key K0, v Map5[K1,K2,K3,K4,K5,V]) (value Map5[K1,K2,K3,K4,K5,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store(key K0, value Map5[K1,K2,K3,K4,K5,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load1(k0 K0, k1 K1, 
-) (value  Map4[K2, K3, K4, K5, V] , ok bool) {
+) (value Map4[K2,K3,K4,K5,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map5[K1, K2, K3, K4, K5, V]
+  var item1  Map5[K4,K5,K6,K7,K8,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -271,18 +781,51 @@ func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map3[K3, K4, K5, V] , ok bool) {
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map4[K2,K3,K4,K5,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map5[K1, K2, K3, K4, K5, V]
+  var item1  Map5[K4,K5,K6,K7,K8,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map4[K2, K3, K4, K5, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map4[K2,K3,K4,K5,V]) (value Map4[K2,K3,K4,K5,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store1(k0 K0, k1 K1, 
+value Map4[K2,K3,K4,K5,V]) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map3[K3,K4,K5,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map5[K4,K5,K6,K7,K8,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map4[K3,K4,K5,K6,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -291,24 +834,69 @@ func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map2[K4, K5, V] , ok bool) {
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map3[K3,K4,K5,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map5[K1, K2, K3, K4, K5, V]
+  var item1  Map5[K4,K5,K6,K7,K8,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map4[K2, K3, K4, K5, V]
+  var item2  Map4[K3,K4,K5,K6,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map3[K3, K4, K5, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map3[K3,K4,K5,V]) (value Map3[K3,K4,K5,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map3[K3,K4,K5,V]) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map2[K4,K5,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map5[K4,K5,K6,K7,K8,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map4[K3,K4,K5,K6,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map3[K2,K3,K4,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -317,30 +905,87 @@ func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3,
   return item3.Load(k3)
 }
 
-
-func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map1[K5, V] , ok bool) {
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map2[K4,K5,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map5[K1, K2, K3, K4, K5, V]
+  var item1  Map5[K4,K5,K6,K7,K8,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map4[K2, K3, K4, K5, V]
+  var item2  Map4[K3,K4,K5,K6,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map3[K3, K4, K5, V]
+  var item3  Map3[K2,K3,K4,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map2[K4, K5, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map2[K4,K5,V]) (value Map2[K4,K5,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map2[K4,K5,V]) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map1[K5,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map5[K4,K5,K6,K7,K8,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map4[K3,K4,K5,K6,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map3[K2,K3,K4,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map2[K1,K2,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -349,42 +994,192 @@ func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K
   return item4.Load(k4)
 }
 
-
-func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value V, ok bool) {
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map1[K5,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map5[K1, K2, K3, K4, K5, V]
+  var item1  Map5[K4,K5,K6,K7,K8,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map4[K2, K3, K4, K5, V]
+  var item2  Map4[K3,K4,K5,K6,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map3[K3, K4, K5, V]
+  var item3  Map3[K2,K3,K4,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map2[K4, K5, V]
+  var item4  Map2[K1,K2,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map1[K5, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map1[K5,V]) (value Map1[K5,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  var item4 Map2[K1,K2,V]
+  item4, _ = item3.LoadOrStore(k3, Map2[K1,K2,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map1[K5,V]) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  var item4 Map2[K1,K2,V]
+  item4, _ = item3.LoadOrStore(k3, Map2[K1,K2,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map5[K4,K5,K6,K7,K8,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map4[K3,K4,K5,K6,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map3[K2,K3,K4,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map2[K1,K2,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map1[K0,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
   return item5.Load(k5)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map5[K4,K5,K6,K7,K8,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map4[K3,K4,K5,K6,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map3[K2,K3,K4,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map2[K1,K2,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map1[K0,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  var item4 Map2[K1,K2,V]
+  item4, _ = item3.LoadOrStore(k3, Map2[K1,K2,V]{})
+
+  var item5 Map1[K0,V]
+  item5, _ = item4.LoadOrStore(k4, Map1[K0,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map6[K0, K1, K2, K3, K4, K5, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map5[K4,K5,K6,K7,K8,V]
+  item1, _ = item0.LoadOrStore(k0, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item2 Map4[K3,K4,K5,K6,V]
+  item2, _ = item1.LoadOrStore(k1, Map4[K3,K4,K5,K6,V]{})
+
+  var item3 Map3[K2,K3,K4,V]
+  item3, _ = item2.LoadOrStore(k2, Map3[K2,K3,K4,V]{})
+
+  var item4 Map2[K1,K2,V]
+  item4, _ = item3.LoadOrStore(k3, Map2[K1,K2,V]{})
+
+  var item5 Map1[K0,V]
+  item5, _ = item4.LoadOrStore(k4, Map1[K0,V]{})
+
+  item5.Store(k5, value)
 }
 
 
@@ -393,17 +1188,29 @@ type Map7[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compara
   inner Map1[K0, Map6[K1,K2,K3,K4,K5,K6,V]]
 }
 
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load(key K0) (value Map6[K1, K2, K3, K4, K5, K6, V], ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load(key K0) (value Map6[K1,K2,K3,K4,K5,K6,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete(key K0) (value Map6[K1,K2,K3,K4,K5,K6,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore(key K0, v Map6[K1,K2,K3,K4,K5,K6,V]) (value Map6[K1,K2,K3,K4,K5,K6,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store(key K0, value Map6[K1,K2,K3,K4,K5,K6,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load1(k0 K0, k1 K1, 
-) (value  Map5[K2, K3, K4, K5, K6, V] , ok bool) {
+) (value Map5[K2,K3,K4,K5,K6,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -412,18 +1219,51 @@ func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map4[K3, K4, K5, K6, V] , ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map5[K2,K3,K4,K5,K6,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map5[K2, K3, K4, K5, K6, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map5[K2,K3,K4,K5,K6,V]) (value Map5[K2,K3,K4,K5,K6,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store1(k0 K0, k1 K1, 
+value Map5[K2,K3,K4,K5,K6,V]) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map4[K3,K4,K5,K6,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -432,24 +1272,69 @@ func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map3[K4, K5, K6, V] , ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map4[K3,K4,K5,K6,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map5[K2, K3, K4, K5, K6, V]
+  var item2  Map5[K4,K5,K6,K7,K8,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map4[K3, K4, K5, K6, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map4[K3,K4,K5,K6,V]) (value Map4[K3,K4,K5,K6,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map4[K3,K4,K5,K6,V]) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map3[K4,K5,K6,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map4[K3,K4,K5,K6,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -458,30 +1343,87 @@ func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3,
   return item3.Load(k3)
 }
 
-
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map2[K5, K6, V] , ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map3[K4,K5,K6,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map5[K2, K3, K4, K5, K6, V]
+  var item2  Map5[K4,K5,K6,K7,K8,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map4[K3, K4, K5, K6, V]
+  var item3  Map4[K3,K4,K5,K6,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map3[K4, K5, K6, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map3[K4,K5,K6,V]) (value Map3[K4,K5,K6,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map3[K4,K5,K6,V]) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map2[K5,K6,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map4[K3,K4,K5,K6,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map3[K2,K3,K4,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -490,36 +1432,105 @@ func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, 
   return item4.Load(k4)
 }
 
-
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value  Map1[K6, V] , ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map2[K5,K6,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map5[K2, K3, K4, K5, K6, V]
+  var item2  Map5[K4,K5,K6,K7,K8,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map4[K3, K4, K5, K6, V]
+  var item3  Map4[K3,K4,K5,K6,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map3[K4, K5, K6, V]
+  var item4  Map3[K2,K3,K4,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map2[K5, K6, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map2[K5,K6,V]) (value Map2[K5,K6,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map2[K5,K6,V]) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map1[K6,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map4[K3,K4,K5,K6,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map3[K2,K3,K4,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map2[K1,K2,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
@@ -528,48 +1539,222 @@ func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, 
   return item5.Load(k5)
 }
 
-
-func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
-) (value V, ok bool) {
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map1[K6,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map6[K1, K2, K3, K4, K5, K6, V]
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map5[K2, K3, K4, K5, K6, V]
+  var item2  Map5[K4,K5,K6,K7,K8,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map4[K3, K4, K5, K6, V]
+  var item3  Map4[K3,K4,K5,K6,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map3[K4, K5, K6, V]
+  var item4  Map3[K2,K3,K4,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map2[K5, K6, V]
+  var item5  Map2[K1,K2,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map1[K6, V]
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v Map1[K6,V]) (value Map1[K6,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  var item5 Map2[K1,K2,V]
+  item5, _ = item4.LoadOrStore(k4, Map2[K1,K2,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value Map1[K6,V]) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  var item5 Map2[K1,K2,V]
+  item5, _ = item4.LoadOrStore(k4, Map2[K1,K2,V]{})
+
+  item5.Store(k5, value)
+}
+
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map4[K3,K4,K5,K6,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map3[K2,K3,K4,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map2[K1,K2,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map1[K0,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
   return item6.Load(k6)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadAndDelete6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map5[K4,K5,K6,K7,K8,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map4[K3,K4,K5,K6,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map3[K2,K3,K4,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map2[K1,K2,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map1[K0,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  return item6.LoadAndDelete(k6)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) LoadOrStore6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  var item5 Map2[K1,K2,V]
+  item5, _ = item4.LoadOrStore(k4, Map2[K1,K2,V]{})
+
+  var item6 Map1[K0,V]
+  item6, _ = item5.LoadOrStore(k5, Map1[K0,V]{})
+
+  return item6.LoadOrStore(k6, v)
+}
+
+func (m *Map7[K0, K1, K2, K3, K4, K5, K6, V]) Store6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map6[K5,K6,K7,K8,K9,K10,V]
+  item1, _ = item0.LoadOrStore(k0, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item2 Map5[K4,K5,K6,K7,K8,V]
+  item2, _ = item1.LoadOrStore(k1, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item3 Map4[K3,K4,K5,K6,V]
+  item3, _ = item2.LoadOrStore(k2, Map4[K3,K4,K5,K6,V]{})
+
+  var item4 Map3[K2,K3,K4,V]
+  item4, _ = item3.LoadOrStore(k3, Map3[K2,K3,K4,V]{})
+
+  var item5 Map2[K1,K2,V]
+  item5, _ = item4.LoadOrStore(k4, Map2[K1,K2,V]{})
+
+  var item6 Map1[K0,V]
+  item6, _ = item5.LoadOrStore(k5, Map1[K0,V]{})
+
+  item6.Store(k6, value)
 }
 
 
@@ -578,17 +1763,29 @@ type Map8[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compara
   inner Map1[K0, Map7[K1,K2,K3,K4,K5,K6,K7,V]]
 }
 
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load(key K0) (value Map7[K1, K2, K3, K4, K5, K6, K7, V], ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load(key K0) (value Map7[K1,K2,K3,K4,K5,K6,K7,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete(key K0) (value Map7[K1,K2,K3,K4,K5,K6,K7,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore(key K0, v Map7[K1,K2,K3,K4,K5,K6,K7,V]) (value Map7[K1,K2,K3,K4,K5,K6,K7,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store(key K0, value Map7[K1,K2,K3,K4,K5,K6,K7,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load1(k0 K0, k1 K1, 
-) (value  Map6[K2, K3, K4, K5, K6, K7, V] , ok bool) {
+) (value Map6[K2,K3,K4,K5,K6,K7,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -597,18 +1794,51 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map5[K3, K4, K5, K6, K7, V] , ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map6[K2,K3,K4,K5,K6,K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map6[K2,K3,K4,K5,K6,K7,V]) (value Map6[K2,K3,K4,K5,K6,K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store1(k0 K0, k1 K1, 
+value Map6[K2,K3,K4,K5,K6,K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map5[K3,K4,K5,K6,K7,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -617,24 +1847,69 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map4[K4, K5, K6, K7, V] , ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map5[K3,K4,K5,K6,K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map5[K3, K4, K5, K6, K7, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map5[K3,K4,K5,K6,K7,V]) (value Map5[K3,K4,K5,K6,K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map5[K3,K4,K5,K6,K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map4[K4,K5,K6,K7,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -643,30 +1918,87 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load3(k0 K0, k1 K1, k2 K2, k3 
   return item3.Load(k3)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map3[K5, K6, K7, V] , ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map4[K4,K5,K6,K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map5[K3, K4, K5, K6, K7, V]
+  var item3  Map5[K4,K5,K6,K7,K8,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map4[K4, K5, K6, K7, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map4[K4,K5,K6,K7,V]) (value Map4[K4,K5,K6,K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map4[K4,K5,K6,K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map3[K5,K6,K7,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map4[K3,K4,K5,K6,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -675,36 +2007,105 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load4(k0 K0, k1 K1, k2 K2, k3 
   return item4.Load(k4)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value  Map2[K6, K7, V] , ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map3[K5,K6,K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map5[K3, K4, K5, K6, K7, V]
+  var item3  Map5[K4,K5,K6,K7,K8,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map4[K4, K5, K6, K7, V]
+  var item4  Map4[K3,K4,K5,K6,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map3[K5, K6, K7, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map3[K5,K6,K7,V]) (value Map3[K5,K6,K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map3[K5,K6,K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map2[K6,K7,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map4[K3,K4,K5,K6,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map3[K2,K3,K4,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
@@ -713,42 +2114,123 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load5(k0 K0, k1 K1, k2 K2, k3 
   return item5.Load(k5)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
-) (value  Map1[K7, V] , ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map2[K6,K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map5[K3, K4, K5, K6, K7, V]
+  var item3  Map5[K4,K5,K6,K7,K8,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map4[K4, K5, K6, K7, V]
+  var item4  Map4[K3,K4,K5,K6,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map3[K5, K6, K7, V]
+  var item5  Map3[K2,K3,K4,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map2[K6, K7, V]
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v Map2[K6,K7,V]) (value Map2[K6,K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value Map2[K6,K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  item5.Store(k5, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map1[K7,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map4[K3,K4,K5,K6,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map3[K2,K3,K4,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map2[K1,K2,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
@@ -757,54 +2239,252 @@ func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load6(k0 K0, k1 K1, k2 K2, k3 
   return item6.Load(k6)
 }
 
-
-func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
-) (value V, ok bool) {
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map1[K7,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map7[K1, K2, K3, K4, K5, K6, K7, V]
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map6[K2, K3, K4, K5, K6, K7, V]
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map5[K3, K4, K5, K6, K7, V]
+  var item3  Map5[K4,K5,K6,K7,K8,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map4[K4, K5, K6, K7, V]
+  var item4  Map4[K3,K4,K5,K6,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map3[K5, K6, K7, V]
+  var item5  Map3[K2,K3,K4,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map2[K6, K7, V]
+  var item6  Map2[K1,K2,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map1[K7, V]
+  return item6.LoadAndDelete(k6)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+v Map1[K7,V]) (value Map1[K7,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  var item6 Map2[K1,K2,V]
+  item6, _ = item5.LoadOrStore(k5, Map2[K1,K2,V]{})
+
+  return item6.LoadOrStore(k6, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+value Map1[K7,V]) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  var item6 Map2[K1,K2,V]
+  item6, _ = item5.LoadOrStore(k5, Map2[K1,K2,V]{})
+
+  item6.Store(k6, value)
+}
+
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map4[K3,K4,K5,K6,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map3[K2,K3,K4,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map2[K1,K2,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map1[K0,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
   return item7.Load(k7)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadAndDelete7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map5[K4,K5,K6,K7,K8,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map4[K3,K4,K5,K6,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map3[K2,K3,K4,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map2[K1,K2,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map1[K0,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  return item7.LoadAndDelete(k7)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) LoadOrStore7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  var item6 Map2[K1,K2,V]
+  item6, _ = item5.LoadOrStore(k5, Map2[K1,K2,V]{})
+
+  var item7 Map1[K0,V]
+  item7, _ = item6.LoadOrStore(k6, Map1[K0,V]{})
+
+  return item7.LoadOrStore(k7, v)
+}
+
+func (m *Map8[K0, K1, K2, K3, K4, K5, K6, K7, V]) Store7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item1, _ = item0.LoadOrStore(k0, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item2 Map6[K5,K6,K7,K8,K9,K10,V]
+  item2, _ = item1.LoadOrStore(k1, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item3 Map5[K4,K5,K6,K7,K8,V]
+  item3, _ = item2.LoadOrStore(k2, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item4 Map4[K3,K4,K5,K6,V]
+  item4, _ = item3.LoadOrStore(k3, Map4[K3,K4,K5,K6,V]{})
+
+  var item5 Map3[K2,K3,K4,V]
+  item5, _ = item4.LoadOrStore(k4, Map3[K2,K3,K4,V]{})
+
+  var item6 Map2[K1,K2,V]
+  item6, _ = item5.LoadOrStore(k5, Map2[K1,K2,V]{})
+
+  var item7 Map1[K0,V]
+  item7, _ = item6.LoadOrStore(k6, Map1[K0,V]{})
+
+  item7.Store(k7, value)
 }
 
 
@@ -813,17 +2493,29 @@ type Map9[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compara
   inner Map1[K0, Map8[K1,K2,K3,K4,K5,K6,K7,K8,V]]
 }
 
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load(key K0) (value Map8[K1, K2, K3, K4, K5, K6, K7, K8, V], ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load(key K0) (value Map8[K1,K2,K3,K4,K5,K6,K7,K8,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete(key K0) (value Map8[K1,K2,K3,K4,K5,K6,K7,K8,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore(key K0, v Map8[K1,K2,K3,K4,K5,K6,K7,K8,V]) (value Map8[K1,K2,K3,K4,K5,K6,K7,K8,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store(key K0, value Map8[K1,K2,K3,K4,K5,K6,K7,K8,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load1(k0 K0, k1 K1, 
-) (value  Map7[K2, K3, K4, K5, K6, K7, K8, V] , ok bool) {
+) (value Map7[K2,K3,K4,K5,K6,K7,K8,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -832,18 +2524,51 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map6[K3, K4, K5, K6, K7, K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map7[K2,K3,K4,K5,K6,K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map7[K2,K3,K4,K5,K6,K7,K8,V]) (value Map7[K2,K3,K4,K5,K6,K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store1(k0 K0, k1 K1, 
+value Map7[K2,K3,K4,K5,K6,K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map6[K3,K4,K5,K6,K7,K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -852,24 +2577,69 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load2(k0 K0, k1 K1, k2 K2,
   return item2.Load(k2)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map5[K4, K5, K6, K7, K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map6[K3,K4,K5,K6,K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map6[K3,K4,K5,K6,K7,K8,V]) (value Map6[K3,K4,K5,K6,K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map6[K3,K4,K5,K6,K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map5[K4,K5,K6,K7,K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -878,30 +2648,87 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load3(k0 K0, k1 K1, k2 K2,
   return item3.Load(k3)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map4[K5, K6, K7, K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map5[K4,K5,K6,K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map5[K4, K5, K6, K7, K8, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map5[K4,K5,K6,K7,K8,V]) (value Map5[K4,K5,K6,K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map5[K4,K5,K6,K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map4[K5,K6,K7,K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -910,36 +2737,105 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load4(k0 K0, k1 K1, k2 K2,
   return item4.Load(k4)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value  Map3[K6, K7, K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map4[K5,K6,K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map5[K4, K5, K6, K7, K8, V]
+  var item4  Map5[K4,K5,K6,K7,K8,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map4[K5, K6, K7, K8, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map4[K5,K6,K7,K8,V]) (value Map4[K5,K6,K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map4[K5,K6,K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map3[K6,K7,K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map4[K3,K4,K5,K6,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
@@ -948,42 +2844,123 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load5(k0 K0, k1 K1, k2 K2,
   return item5.Load(k5)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
-) (value  Map2[K7, K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map3[K6,K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map5[K4, K5, K6, K7, K8, V]
+  var item4  Map5[K4,K5,K6,K7,K8,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map4[K5, K6, K7, K8, V]
+  var item5  Map4[K3,K4,K5,K6,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map3[K6, K7, K8, V]
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v Map3[K6,K7,K8,V]) (value Map3[K6,K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value Map3[K6,K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  item5.Store(k5, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map2[K7,K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map4[K3,K4,K5,K6,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map3[K2,K3,K4,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
@@ -992,48 +2969,141 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load6(k0 K0, k1 K1, k2 K2,
   return item6.Load(k6)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
-) (value  Map1[K8, V] , ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map2[K7,K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map5[K4, K5, K6, K7, K8, V]
+  var item4  Map5[K4,K5,K6,K7,K8,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map4[K5, K6, K7, K8, V]
+  var item5  Map4[K3,K4,K5,K6,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map3[K6, K7, K8, V]
+  var item6  Map3[K2,K3,K4,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map2[K7, K8, V]
+  return item6.LoadAndDelete(k6)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+v Map2[K7,K8,V]) (value Map2[K7,K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  return item6.LoadOrStore(k6, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+value Map2[K7,K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  item6.Store(k6, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map1[K8,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map4[K3,K4,K5,K6,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map3[K2,K3,K4,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map2[K1,K2,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
@@ -1042,60 +3112,282 @@ func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load7(k0 K0, k1 K1, k2 K2,
   return item7.Load(k7)
 }
 
-
-func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
-) (value V, ok bool) {
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map1[K8,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map8[K1, K2, K3, K4, K5, K6, K7, K8, V]
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map7[K2, K3, K4, K5, K6, K7, K8, V]
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map6[K3, K4, K5, K6, K7, K8, V]
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map5[K4, K5, K6, K7, K8, V]
+  var item4  Map5[K4,K5,K6,K7,K8,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map4[K5, K6, K7, K8, V]
+  var item5  Map4[K3,K4,K5,K6,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map3[K6, K7, K8, V]
+  var item6  Map3[K2,K3,K4,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map2[K7, K8, V]
+  var item7  Map2[K1,K2,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map1[K8, V]
+  return item7.LoadAndDelete(k7)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+v Map1[K8,V]) (value Map1[K8,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  var item7 Map2[K1,K2,V]
+  item7, _ = item6.LoadOrStore(k6, Map2[K1,K2,V]{})
+
+  return item7.LoadOrStore(k7, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+value Map1[K8,V]) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  var item7 Map2[K1,K2,V]
+  item7, _ = item6.LoadOrStore(k6, Map2[K1,K2,V]{})
+
+  item7.Store(k7, value)
+}
+
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map4[K3,K4,K5,K6,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map3[K2,K3,K4,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map2[K1,K2,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map1[K0,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
   }
 
   return item8.Load(k8)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadAndDelete8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map5[K4,K5,K6,K7,K8,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map4[K3,K4,K5,K6,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map3[K2,K3,K4,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map2[K1,K2,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map1[K0,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  return item8.LoadAndDelete(k8)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) LoadOrStore8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  var item7 Map2[K1,K2,V]
+  item7, _ = item6.LoadOrStore(k6, Map2[K1,K2,V]{})
+
+  var item8 Map1[K0,V]
+  item8, _ = item7.LoadOrStore(k7, Map1[K0,V]{})
+
+  return item8.LoadOrStore(k8, v)
+}
+
+func (m *Map9[K0, K1, K2, K3, K4, K5, K6, K7, K8, V]) Store8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item1, _ = item0.LoadOrStore(k0, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item2 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item2, _ = item1.LoadOrStore(k1, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item3 Map6[K5,K6,K7,K8,K9,K10,V]
+  item3, _ = item2.LoadOrStore(k2, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item4 Map5[K4,K5,K6,K7,K8,V]
+  item4, _ = item3.LoadOrStore(k3, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item5 Map4[K3,K4,K5,K6,V]
+  item5, _ = item4.LoadOrStore(k4, Map4[K3,K4,K5,K6,V]{})
+
+  var item6 Map3[K2,K3,K4,V]
+  item6, _ = item5.LoadOrStore(k5, Map3[K2,K3,K4,V]{})
+
+  var item7 Map2[K1,K2,V]
+  item7, _ = item6.LoadOrStore(k6, Map2[K1,K2,V]{})
+
+  var item8 Map1[K0,V]
+  item8, _ = item7.LoadOrStore(k7, Map1[K0,V]{})
+
+  item8.Store(k8, value)
 }
 
 
@@ -1104,17 +3396,29 @@ type Map10[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compar
   inner Map1[K0, Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V]]
 }
 
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load(key K0) (value Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V], ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load(key K0) (value Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete(key K0) (value Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore(key K0, v Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V]) (value Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store(key K0, value Map9[K1,K2,K3,K4,K5,K6,K7,K8,K9,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load1(k0 K0, k1 K1, 
-) (value  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V] , ok bool) {
+) (value Map8[K2,K3,K4,K5,K6,K7,K8,K9,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -1123,18 +3427,51 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load1(k0 K0, k1 K1,
   return item1.Load(k1)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map7[K3, K4, K5, K6, K7, K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map8[K2,K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map8[K2,K3,K4,K5,K6,K7,K8,K9,V]) (value Map8[K2,K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store1(k0 K0, k1 K1, 
+value Map8[K2,K3,K4,K5,K6,K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map7[K3,K4,K5,K6,K7,K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -1143,24 +3480,69 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load2(k0 K0, k1 K1, k
   return item2.Load(k2)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map6[K4, K5, K6, K7, K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map7[K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map7[K3,K4,K5,K6,K7,K8,K9,V]) (value Map7[K3,K4,K5,K6,K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map7[K3,K4,K5,K6,K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map6[K4,K5,K6,K7,K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -1169,30 +3551,87 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load3(k0 K0, k1 K1, k
   return item3.Load(k3)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map5[K5, K6, K7, K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map6[K4,K5,K6,K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map6[K4,K5,K6,K7,K8,K9,V]) (value Map6[K4,K5,K6,K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map6[K4,K5,K6,K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map5[K5,K6,K7,K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -1201,36 +3640,105 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load4(k0 K0, k1 K1, k
   return item4.Load(k4)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value  Map4[K6, K7, K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map5[K5,K6,K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map5[K5, K6, K7, K8, K9, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map5[K5,K6,K7,K8,K9,V]) (value Map5[K5,K6,K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map5[K5,K6,K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map4[K6,K7,K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
@@ -1239,42 +3747,123 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load5(k0 K0, k1 K1, k
   return item5.Load(k5)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
-) (value  Map3[K7, K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map4[K6,K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map5[K5, K6, K7, K8, K9, V]
+  var item5  Map5[K4,K5,K6,K7,K8,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map4[K6, K7, K8, K9, V]
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v Map4[K6,K7,K8,K9,V]) (value Map4[K6,K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value Map4[K6,K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item5.Store(k5, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map3[K7,K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map4[K3,K4,K5,K6,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
@@ -1283,48 +3872,141 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load6(k0 K0, k1 K1, k
   return item6.Load(k6)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
-) (value  Map2[K8, K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map3[K7,K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map5[K5, K6, K7, K8, K9, V]
+  var item5  Map5[K4,K5,K6,K7,K8,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map4[K6, K7, K8, K9, V]
+  var item6  Map4[K3,K4,K5,K6,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map3[K7, K8, K9, V]
+  return item6.LoadAndDelete(k6)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+v Map3[K7,K8,K9,V]) (value Map3[K7,K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  return item6.LoadOrStore(k6, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+value Map3[K7,K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  item6.Store(k6, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map2[K8,K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map4[K3,K4,K5,K6,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map3[K2,K3,K4,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
@@ -1333,54 +4015,159 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load7(k0 K0, k1 K1, k
   return item7.Load(k7)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
-) (value  Map1[K9, V] , ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map2[K8,K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map5[K5, K6, K7, K8, K9, V]
+  var item5  Map5[K4,K5,K6,K7,K8,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map4[K6, K7, K8, K9, V]
+  var item6  Map4[K3,K4,K5,K6,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map3[K7, K8, K9, V]
+  var item7  Map3[K2,K3,K4,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map2[K8, K9, V]
+  return item7.LoadAndDelete(k7)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+v Map2[K8,K9,V]) (value Map2[K8,K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  return item7.LoadOrStore(k7, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+value Map2[K8,K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  item7.Store(k7, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value Map1[K9,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map4[K3,K4,K5,K6,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map3[K2,K3,K4,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map2[K1,K2,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
@@ -1389,66 +4176,312 @@ func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load8(k0 K0, k1 K1, k
   return item8.Load(k8)
 }
 
-
-func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
-) (value V, ok bool) {
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value Map1[K9,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map9[K1, K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map8[K2, K3, K4, K5, K6, K7, K8, K9, V]
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map7[K3, K4, K5, K6, K7, K8, K9, V]
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map6[K4, K5, K6, K7, K8, K9, V]
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map5[K5, K6, K7, K8, K9, V]
+  var item5  Map5[K4,K5,K6,K7,K8,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map4[K6, K7, K8, K9, V]
+  var item6  Map4[K3,K4,K5,K6,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map3[K7, K8, K9, V]
+  var item7  Map3[K2,K3,K4,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map2[K8, K9, V]
+  var item8  Map2[K1,K2,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
   }
 
-  var item9  Map1[K9, V]
+  return item8.LoadAndDelete(k8)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+v Map1[K9,V]) (value Map1[K9,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  var item8 Map2[K1,K2,V]
+  item8, _ = item7.LoadOrStore(k7, Map2[K1,K2,V]{})
+
+  return item8.LoadOrStore(k8, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+value Map1[K9,V]) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  var item8 Map2[K1,K2,V]
+  item8, _ = item7.LoadOrStore(k7, Map2[K1,K2,V]{})
+
+  item8.Store(k8, value)
+}
+
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Load9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map4[K3,K4,K5,K6,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map3[K2,K3,K4,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map2[K1,K2,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  var item9  Map1[K0,V]
   item9, ok = item8.Load(k8)
   if !ok {
     return
   }
 
   return item9.Load(k9)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadAndDelete9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map5[K4,K5,K6,K7,K8,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map4[K3,K4,K5,K6,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map3[K2,K3,K4,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map2[K1,K2,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  var item9  Map1[K0,V]
+  item9, ok = item8.Load(k8)
+  if !ok {
+    return
+  }
+
+  return item9.LoadAndDelete(k9)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) LoadOrStore9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  var item8 Map2[K1,K2,V]
+  item8, _ = item7.LoadOrStore(k7, Map2[K1,K2,V]{})
+
+  var item9 Map1[K0,V]
+  item9, _ = item8.LoadOrStore(k8, Map1[K0,V]{})
+
+  return item9.LoadOrStore(k9, v)
+}
+
+func (m *Map10[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, V]) Store9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item1, _ = item0.LoadOrStore(k0, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item2 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item2, _ = item1.LoadOrStore(k1, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item3 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item3, _ = item2.LoadOrStore(k2, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item4 Map6[K5,K6,K7,K8,K9,K10,V]
+  item4, _ = item3.LoadOrStore(k3, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item5 Map5[K4,K5,K6,K7,K8,V]
+  item5, _ = item4.LoadOrStore(k4, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item6 Map4[K3,K4,K5,K6,V]
+  item6, _ = item5.LoadOrStore(k5, Map4[K3,K4,K5,K6,V]{})
+
+  var item7 Map3[K2,K3,K4,V]
+  item7, _ = item6.LoadOrStore(k6, Map3[K2,K3,K4,V]{})
+
+  var item8 Map2[K1,K2,V]
+  item8, _ = item7.LoadOrStore(k7, Map2[K1,K2,V]{})
+
+  var item9 Map1[K0,V]
+  item9, _ = item8.LoadOrStore(k8, Map1[K0,V]{})
+
+  item9.Store(k9, value)
 }
 
 
@@ -1457,17 +4490,29 @@ type Map11[K0 comparable, K1 comparable, K2 comparable, K3 comparable, K4 compar
   inner Map1[K0, Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V]]
 }
 
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load(key K0) (value Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V], ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load(key K0) (value Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V], ok bool) {
   return m.inner.Load(key)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete(key K0) (value Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  return m.inner.LoadAndDelete(key)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore(key K0, v Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V]) (value Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  return m.inner.LoadOrStore(key)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store(key K0, value Map10[K1,K2,K3,K4,K5,K6,K7,K8,K9,K10,V]) {
+  m.inner.store(key, value)
 }
 
 
 
 func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load1(k0 K0, k1 K1, 
-) (value  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V] , ok bool) {
+) (value Map9[K2,K3,K4,K5,K6,K7,K8,K9,K10,V], ok bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
@@ -1476,18 +4521,51 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load1(k0 K0, k1 
   return item1.Load(k1)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load2(k0 K0, k1 K1, k2 K2, 
-) (value  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete1(k0 K0, k1 K1, 
+) (value Map9[K2,K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  return item1.LoadAndDelete(k1)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore1(k0 K0, k1 K1, 
+v Map9[K2,K3,K4,K5,K6,K7,K8,K9,K10,V]) (value Map9[K2,K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  return item1.LoadOrStore(k1, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store1(k0 K0, k1 K1, 
+value Map9[K2,K3,K4,K5,K6,K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  item1.Store(k1, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load2(k0 K0, k1 K1, k2 K2, 
+) (value Map8[K3,K4,K5,K6,K7,K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
@@ -1496,24 +4574,69 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load2(k0 K0, k1 
   return item2.Load(k2)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
-) (value  Map7[K4, K5, K6, K7, K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete2(k0 K0, k1 K1, k2 K2, 
+) (value Map8[K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  return item2.LoadAndDelete(k2)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore2(k0 K0, k1 K1, k2 K2, 
+v Map8[K3,K4,K5,K6,K7,K8,K9,K10,V]) (value Map8[K3,K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  return item2.LoadOrStore(k2, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store2(k0 K0, k1 K1, k2 K2, 
+value Map8[K3,K4,K5,K6,K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  item2.Store(k2, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map7[K4,K5,K6,K7,K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
@@ -1522,30 +4645,87 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load3(k0 K0, k1 
   return item3.Load(k3)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
-) (value  Map6[K5, K6, K7, K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete3(k0 K0, k1 K1, k2 K2, k3 K3, 
+) (value Map7[K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  return item3.LoadAndDelete(k3)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore3(k0 K0, k1 K1, k2 K2, k3 K3, 
+v Map7[K4,K5,K6,K7,K8,K9,K10,V]) (value Map7[K4,K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  return item3.LoadOrStore(k3, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store3(k0 K0, k1 K1, k2 K2, k3 K3, 
+value Map7[K4,K5,K6,K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  item3.Store(k3, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map6[K5,K6,K7,K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
@@ -1554,36 +4734,105 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load4(k0 K0, k1 
   return item4.Load(k4)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
-) (value  Map5[K6, K7, K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+) (value Map6[K5,K6,K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  return item4.LoadAndDelete(k4)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+v Map6[K5,K6,K7,K8,K9,K10,V]) (value Map6[K5,K6,K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  return item4.LoadOrStore(k4, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store4(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, 
+value Map6[K5,K6,K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  item4.Store(k4, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map5[K6,K7,K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
@@ -1592,42 +4841,123 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load5(k0 K0, k1 
   return item5.Load(k5)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
-) (value  Map4[K7, K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+) (value Map5[K6,K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map5[K6, K7, K8, K9, K10, V]
+  return item5.LoadAndDelete(k5)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+v Map5[K6,K7,K8,K9,K10,V]) (value Map5[K6,K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  return item5.LoadOrStore(k5, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store5(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, 
+value Map5[K6,K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  item5.Store(k5, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map4[K7,K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
@@ -1636,48 +4966,141 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load6(k0 K0, k1 
   return item6.Load(k6)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
-) (value  Map3[K8, K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+) (value Map4[K7,K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map5[K6, K7, K8, K9, K10, V]
+  var item6  Map5[K4,K5,K6,K7,K8,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map4[K7, K8, K9, K10, V]
+  return item6.LoadAndDelete(k6)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+v Map4[K7,K8,K9,K10,V]) (value Map4[K7,K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  return item6.LoadOrStore(k6, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store6(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, 
+value Map4[K7,K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  item6.Store(k6, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map3[K8,K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map4[K3,K4,K5,K6,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
@@ -1686,54 +5109,159 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load7(k0 K0, k1 
   return item7.Load(k7)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
-) (value  Map2[K9, K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+) (value Map3[K8,K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map5[K6, K7, K8, K9, K10, V]
+  var item6  Map5[K4,K5,K6,K7,K8,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map4[K7, K8, K9, K10, V]
+  var item7  Map4[K3,K4,K5,K6,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map3[K8, K9, K10, V]
+  return item7.LoadAndDelete(k7)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+v Map3[K8,K9,K10,V]) (value Map3[K8,K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  return item7.LoadOrStore(k7, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store7(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, 
+value Map3[K8,K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  item7.Store(k7, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value Map2[K9,K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map4[K3,K4,K5,K6,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map3[K2,K3,K4,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
@@ -1742,60 +5270,177 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load8(k0 K0, k1 
   return item8.Load(k8)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
-) (value  Map1[K10, V] , ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+) (value Map2[K9,K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map5[K6, K7, K8, K9, K10, V]
+  var item6  Map5[K4,K5,K6,K7,K8,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map4[K7, K8, K9, K10, V]
+  var item7  Map4[K3,K4,K5,K6,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map3[K8, K9, K10, V]
+  var item8  Map3[K2,K3,K4,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
   }
 
-  var item9  Map2[K9, K10, V]
+  return item8.LoadAndDelete(k8)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+v Map2[K9,K10,V]) (value Map2[K9,K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  return item8.LoadOrStore(k8, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store8(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, 
+value Map2[K9,K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  item8.Store(k8, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+) (value Map1[K10,V], ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map4[K3,K4,K5,K6,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map3[K2,K3,K4,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  var item9  Map2[K1,K2,V]
   item9, ok = item8.Load(k8)
   if !ok {
     return
@@ -1804,72 +5449,342 @@ func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load9(k0 K0, k1 
   return item9.Load(k9)
 }
 
-
-func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load10(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, k10 K10, 
-) (value V, ok bool) {
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+) (value Map1[K10,V], loaded bool) {
   item0 := m.inner
 
-  var item1  Map10[K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
   item1, ok = item0.Load(k0)
   if !ok {
     return
   }
 
-  var item2  Map9[K2, K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
   item2, ok = item1.Load(k1)
   if !ok {
     return
   }
 
-  var item3  Map8[K3, K4, K5, K6, K7, K8, K9, K10, V]
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
   item3, ok = item2.Load(k2)
   if !ok {
     return
   }
 
-  var item4  Map7[K4, K5, K6, K7, K8, K9, K10, V]
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
   item4, ok = item3.Load(k3)
   if !ok {
     return
   }
 
-  var item5  Map6[K5, K6, K7, K8, K9, K10, V]
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
   item5, ok = item4.Load(k4)
   if !ok {
     return
   }
 
-  var item6  Map5[K6, K7, K8, K9, K10, V]
+  var item6  Map5[K4,K5,K6,K7,K8,V]
   item6, ok = item5.Load(k5)
   if !ok {
     return
   }
 
-  var item7  Map4[K7, K8, K9, K10, V]
+  var item7  Map4[K3,K4,K5,K6,V]
   item7, ok = item6.Load(k6)
   if !ok {
     return
   }
 
-  var item8  Map3[K8, K9, K10, V]
+  var item8  Map3[K2,K3,K4,V]
   item8, ok = item7.Load(k7)
   if !ok {
     return
   }
 
-  var item9  Map2[K9, K10, V]
+  var item9  Map2[K1,K2,V]
   item9, ok = item8.Load(k8)
   if !ok {
     return
   }
 
-  var item10  Map1[K10, V]
+  return item9.LoadAndDelete(k9)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+v Map1[K10,V]) (value Map1[K10,V], loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  var item9 Map2[K1,K2,V]
+  item9, _ = item8.LoadOrStore(k8, Map2[K1,K2,V]{})
+
+  return item9.LoadOrStore(k9, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store9(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, 
+value Map1[K10,V]) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  var item9 Map2[K1,K2,V]
+  item9, _ = item8.LoadOrStore(k8, Map2[K1,K2,V]{})
+
+  item9.Store(k9, value)
+}
+
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Load10(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, k10 K10, 
+) (value V, ok bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map4[K3,K4,K5,K6,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map3[K2,K3,K4,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  var item9  Map2[K1,K2,V]
+  item9, ok = item8.Load(k8)
+  if !ok {
+    return
+  }
+
+  var item10  Map1[K0,V]
   item10, ok = item9.Load(k9)
   if !ok {
     return
   }
 
   return item10.Load(k10)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadAndDelete10(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, k10 K10, 
+) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1  Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, ok = item0.Load(k0)
+  if !ok {
+    return
+  }
+
+  var item2  Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, ok = item1.Load(k1)
+  if !ok {
+    return
+  }
+
+  var item3  Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, ok = item2.Load(k2)
+  if !ok {
+    return
+  }
+
+  var item4  Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, ok = item3.Load(k3)
+  if !ok {
+    return
+  }
+
+  var item5  Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, ok = item4.Load(k4)
+  if !ok {
+    return
+  }
+
+  var item6  Map5[K4,K5,K6,K7,K8,V]
+  item6, ok = item5.Load(k5)
+  if !ok {
+    return
+  }
+
+  var item7  Map4[K3,K4,K5,K6,V]
+  item7, ok = item6.Load(k6)
+  if !ok {
+    return
+  }
+
+  var item8  Map3[K2,K3,K4,V]
+  item8, ok = item7.Load(k7)
+  if !ok {
+    return
+  }
+
+  var item9  Map2[K1,K2,V]
+  item9, ok = item8.Load(k8)
+  if !ok {
+    return
+  }
+
+  var item10  Map1[K0,V]
+  item10, ok = item9.Load(k9)
+  if !ok {
+    return
+  }
+
+  return item10.LoadAndDelete(k10)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) LoadOrStore10(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, k10 K10, 
+v V) (value V, loaded bool) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  var item9 Map2[K1,K2,V]
+  item9, _ = item8.LoadOrStore(k8, Map2[K1,K2,V]{})
+
+  var item10 Map1[K0,V]
+  item10, _ = item9.LoadOrStore(k9, Map1[K0,V]{})
+
+  return item10.LoadOrStore(k10, v)
+}
+
+func (m *Map11[K0, K1, K2, K3, K4, K5, K6, K7, K8, K9, K10, V]) Store10(k0 K0, k1 K1, k2 K2, k3 K3, k4 K4, k5 K5, k6 K6, k7 K7, k8 K8, k9 K9, k10 K10, 
+value V) {
+  item0 := m.inner
+
+  var item1 Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]
+  item1, _ = item0.LoadOrStore(k0, Map10[K9,K10,K11,K12,K13,K14,K15,K16,K17,K18,V]{})
+
+  var item2 Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]
+  item2, _ = item1.LoadOrStore(k1, Map9[K8,K9,K10,K11,K12,K13,K14,K15,K16,V]{})
+
+  var item3 Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]
+  item3, _ = item2.LoadOrStore(k2, Map8[K7,K8,K9,K10,K11,K12,K13,K14,V]{})
+
+  var item4 Map7[K6,K7,K8,K9,K10,K11,K12,V]
+  item4, _ = item3.LoadOrStore(k3, Map7[K6,K7,K8,K9,K10,K11,K12,V]{})
+
+  var item5 Map6[K5,K6,K7,K8,K9,K10,V]
+  item5, _ = item4.LoadOrStore(k4, Map6[K5,K6,K7,K8,K9,K10,V]{})
+
+  var item6 Map5[K4,K5,K6,K7,K8,V]
+  item6, _ = item5.LoadOrStore(k5, Map5[K4,K5,K6,K7,K8,V]{})
+
+  var item7 Map4[K3,K4,K5,K6,V]
+  item7, _ = item6.LoadOrStore(k6, Map4[K3,K4,K5,K6,V]{})
+
+  var item8 Map3[K2,K3,K4,V]
+  item8, _ = item7.LoadOrStore(k7, Map3[K2,K3,K4,V]{})
+
+  var item9 Map2[K1,K2,V]
+  item9, _ = item8.LoadOrStore(k8, Map2[K1,K2,V]{})
+
+  var item10 Map1[K0,V]
+  item10, _ = item9.LoadOrStore(k9, Map1[K0,V]{})
+
+  item10.Store(k10, value)
 }
 
 

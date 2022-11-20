@@ -1,32 +1,11 @@
 
 
 
-func (m *{{template "typedef" $curCount}}) LoadAndDelete(key K0) (value V, loaded bool) {
-  val, loaded := m.inner.LoadAndDelete(key)
-  if loaded {
-    return val.(V), loaded
-  }
-  var def V
-  return def, loaded
-}
-func (m *{{template "typedef" $curCount}}) LoadOrStore(key K0, value V) (actual V, loaded bool) {
-  val, loaded := m.inner.LoadOrStore(key, value)
-  if loaded {
-    return val.(V), loaded
-  }
-  var def V
-  return def, loaded
-}
-
 func (m *{{template "typedef" $curCount}}) Range(f func(key K0, value {{template "typedef" (sub $curCount 1)}}) bool) {
   innerFun := func(key, value any) bool {
     tKey, tVal := key.(K0), value.({{template "typedef" (sub $curCount 1)}})
     return f(tKey, tVal)
   }
   m.inner.Range(innerFun)
-}
-
-func (m *{{template "typedef" $curCount}}) Store(key K0, value V) {
-  m.inner.Store(key, value)
 }
 
