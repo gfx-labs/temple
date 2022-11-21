@@ -18,6 +18,10 @@ func (m *Map1[K, V]) Delete(key K) {
 	m.inner.Delete(key)
 }
 
+func (m *Map1[K, V]) Delete0(key K) {
+	m.Delete(key)
+}
+
 // Load returns the value stored in the map for a key, or nil if no value is present. The ok result indicates whether value was found in the map.
 func (m *Map1[K, V]) Load(key K) (value V, ok bool) {
 	val, ok := m.inner.Load(key)
@@ -26,6 +30,10 @@ func (m *Map1[K, V]) Load(key K) (value V, ok bool) {
 	}
 	var def V
 	return def, ok
+}
+
+func (m *Map1[K, V]) Load0(key K) (value V, ok bool) {
+	return m.Load(key)
 }
 
 // LoadAndDelete deletes the value for a key, returning the previous value if any. The loaded result reports whether the key was present.
@@ -38,6 +46,10 @@ func (m *Map1[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 	return def, loaded
 }
 
+func (m *Map1[K, V]) LoadAndDelete0(key K) (value V, loaded bool) {
+	return m.LoadAndDelete(key)
+}
+
 // LoadOrStore returns the existing value for the key if present. Otherwise, it stores and returns the given value. The loaded result is true if the value was loaded, false if stored.
 func (m *Map1[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 	val, loaded := m.inner.LoadOrStore(key, value)
@@ -46,6 +58,10 @@ func (m *Map1[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 	}
 	var def V
 	return def, loaded
+}
+
+func (m *Map1[K, V]) LoadOrStore0(key K, value V) (actual V, loaded bool) {
+	return m.LoadOrStore(key, value)
 }
 
 // Range calls f sequentially for each key and value present in the map.
@@ -67,7 +83,15 @@ func (m *Map1[K, V]) Range(f func(key K, value V) bool) {
 	m.inner.Range(innerFun)
 }
 
+func (m *Map1[K, V]) Range0(f func(key K, value V) bool) {
+	m.Range(f)
+}
+
 // Store sets the value for a key.
 func (m *Map1[K, V]) Store(key K, value V) {
 	m.inner.Store(key, value)
+}
+
+func (m *Map1[K, V]) Store0(key K, value V) {
+	m.Store(key, value)
 }
