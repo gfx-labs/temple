@@ -1,9 +1,10 @@
 {{$count := (index . 0) -}}
 {{$offset := (index . 1) -}}
+{{$make := (index . 2) -}}
 {{if eq $count -1 -}}
     V
 {{- else -}}
-    Map{{add 1 $count}}[
+    {{if $make}}&{{else}}*{{end}}Map{{add 1 $count}}[
     {{- range $val := iterateFromN $offset (add 1 $count) -}}
         K{{$val}},
     {{- end -}}
