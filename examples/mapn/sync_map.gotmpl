@@ -8,7 +8,7 @@ import (
 //
 // The zero Map1 is empty and ready for use. A Map1 must not be copied after first use.
 type Map1[K comparable, V any] struct {
-	inner sync.Map1
+	inner sync.Map
 }
 
 // Delete deletes the value for a key.

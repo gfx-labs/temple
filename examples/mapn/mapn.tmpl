@@ -10,16 +10,24 @@ func (m *{{template "typedef" $curCount}}) Load(key K0) (value {{template "relty
   return m.inner.Load(key)
 }
 
+func (m *{{template "typedef" $curCount}}) Delete(key K0) {
+  m.inner.Delete(key)
+}
+
+func (m *{{template "typedef" $curCount}}) Range(f func(K0, {{template "reltypedef" (list (sub $curCount 1) 1)}}) bool) {
+  m.inner.Range(f)
+}
+
 func (m *{{template "typedef" $curCount}}) LoadAndDelete(key K0) (value {{template "reltypedef" (list (sub $curCount 1) 1)}}, loaded bool) {
   return m.inner.LoadAndDelete(key)
 }
 
 func (m *{{template "typedef" $curCount}}) LoadOrStore(key K0, v {{template "reltypedef" (list (sub $curCount 1) 1)}}) (value {{template "reltypedef" (list (sub $curCount 1) 1)}}, loaded bool) {
-  return m.inner.LoadOrStore(key)
+  return m.inner.LoadOrStore(key, v)
 }
 
 func (m *{{template "typedef" $curCount}}) Store(key K0, value {{template "reltypedef" (list (sub $curCount 1) 1)}}) {
-  m.inner.store(key, value)
+  m.inner.Store(key, value)
 }
 
 {{range $subCurCount:= iterateFromN 1 $curCount}}
@@ -28,7 +36,7 @@ func (m *{{template "typedef" $curCount}}) Load{{$subCurCount}}({{range $val := 
 ) (value {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}, ok bool) {
   item0 := m.inner
 {{range $val := (iterateFromN 1 ($subCurCount)) }}
-  var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}
+  var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) .)}}
   item{{$val}}, ok = item{{sub $val 1}}.Load(k{{sub $val 1}})
   if !ok {
     return
@@ -37,13 +45,41 @@ func (m *{{template "typedef" $curCount}}) Load{{$subCurCount}}({{range $val := 
   return item{{$subCurCount}}.Load(k{{$subCurCount}})
 }
 
+func (m *{{template "typedef" $curCount}}) Delete{{$subCurCount}}({{range $val := (iterateFromN 0 (add 1 $subCurCount)) }}k{{$val}} K{{$val}}, {{end}}
+) {
+  var ok bool
+  item0 := m.inner
+{{range $val := (iterateFromN 1 ($subCurCount)) }}
+  var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) .)}}
+  item{{$val}}, ok = item{{sub $val 1}}.Load(k{{sub $val 1}})
+  if !ok {
+    return
+  }
+{{end}}
+  item{{$subCurCount}}.Delete(k{{$subCurCount}})
+}
+
+func (m *{{template "typedef" $curCount}}) Range{{$subCurCount}}({{range $val := (iterateFromN 0 (add 1 $subCurCount)) }}k{{$val}} K{{$val}}, {{end}}
+f func(K{{$subCurCount}}, {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}) bool) {
+  var ok bool
+  item0 := m.inner
+  {{range $val := (iterateFromN 1 ($subCurCount)) }}
+    var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) .)}}
+    item{{$val}}, ok = item{{sub $val 1}}.Load(k{{sub $val 1}})
+    if !ok {
+      return
+    }
+  {{end}}
+  item{{$subCurCount}}.Range(f)
+}
+
 func (m *{{template "typedef" $curCount}}) LoadAndDelete{{$subCurCount}}({{range $val := (iterateFromN 0 (add 1 $subCurCount)) }}k{{$val}} K{{$val}}, {{end}}
 ) (value {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}, loaded bool) {
   item0 := m.inner
 {{range $val := (iterateFromN 1 ($subCurCount)) }}
-  var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}
-  item{{$val}}, ok = item{{sub $val 1}}.Load(k{{sub $val 1}})
-  if !ok {
+  var item{{$val}}  {{template "reltypedef" (list (sub $curCount .) .)}}
+  item{{$val}}, loaded = item{{sub $val 1}}.Load(k{{sub $val 1}})
+  if !loaded {
     return
   }
 {{end}}
@@ -54,8 +90,8 @@ func (m *{{template "typedef" $curCount}}) LoadOrStore{{$subCurCount}}({{range $
 v {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}) (value {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}, loaded bool) {
   item0 := m.inner
 {{range $val := (iterateFromN 1 ($subCurCount)) }}
-  var item{{$val}} {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}
-  item{{$val}}, _ = item{{sub $val 1}}.LoadOrStore(k{{sub $val 1}}, {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}{})
+  var item{{$val}} {{template "reltypedef" (list (sub $curCount .) .)}}
+  item{{$val}}, _ = item{{sub $val 1}}.LoadOrStore(k{{sub $val 1}}, {{template "reltypedef" (list (sub $curCount .) .)}}{})
 {{end}}
   return item{{$subCurCount}}.LoadOrStore(k{{$subCurCount}}, v)
 }
@@ -64,8 +100,8 @@ func (m *{{template "typedef" $curCount}}) Store{{$subCurCount}}({{range $val :=
 value {{template "reltypedef" (list (sub (sub $curCount $subCurCount) 1) (add $subCurCount 1))}}) {
   item0 := m.inner
 {{range $val := (iterateFromN 1 ($subCurCount)) }}
-  var item{{$val}} {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}
-  item{{$val}}, _ = item{{sub $val 1}}.LoadOrStore(k{{sub $val 1}}, {{template "reltypedef" (list (sub $curCount .) (sub $curCount .))}}{})
+  var item{{$val}} {{template "reltypedef" (list (sub $curCount .) .)}}
+  item{{$val}}, _ = item{{sub $val 1}}.LoadOrStore(k{{sub $val 1}}, {{template "reltypedef" (list (sub $curCount .) .)}}{})
 {{end}}
   item{{$subCurCount}}.Store(k{{$subCurCount}}, value)
 }
