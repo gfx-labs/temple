@@ -10,11 +10,7 @@ import (
 )
 
 func main() {
-	temple.RegisterTemplateFile("mapn.tmpl")
-	temple.RegisterTemplateFile("typedef.tmpl")
-	temple.RegisterTemplateFile("reltypedef.tmpl")
-	temple.RegisterTemplateFile("generictypedef.tmpl")
-	temple.RegisterTemplateFile("sync_map.gotmpl")
+	temple.RegisterTemplateDir(".")
 	temple.Prepare(&sanctum.Prayer{
 		Input: "mapn",
 		Obj: map[string]any{
