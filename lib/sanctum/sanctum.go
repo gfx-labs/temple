@@ -126,10 +126,30 @@ func (t *Sanctum) RegisterTemplateFile(name string) {
 	if err != nil {
 		return
 	}
+	name = filepath.Base(name)
 	name = strings.TrimSuffix(name, ".tmpl")
 	name = strings.TrimSuffix(name, ".gotmpl")
 	sbts := string(bts)
 	t.RegisterTemplate(name, sbts)
+}
+func (t *Sanctum) RegisterTemplateDir(path string) {
+	files, err := afero.ReadDir(t.fs, path)
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			// TODO should this be recursive?
+			continue
+		}
+
+		switch filepath.Ext(file.Name()) {
+		case ".gotmpl", ".tmpl":
+			t.RegisterTemplateFile(filepath.Join(path, file.Name()))
+		default:
+			continue
+		}
+	}
 }
 func (t *Sanctum) RegisterTemplate(name string, content string) {
 	t.template[name] = strings.Trim(strings.TrimSpace(content), "\n")

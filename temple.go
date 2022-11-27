@@ -23,6 +23,9 @@ func ReadObjectFile(item any, path ...string) {
 func RegisterTemplateFile(name string) {
 	Sanctum.RegisterTemplateFile(name)
 }
+func RegisterTemplateDir(path string) {
+	Sanctum.RegisterTemplateDir(path)
+}
 func RegisterTemplate(name string, content string) {
 	Sanctum.RegisterTemplate(name, content)
 }
