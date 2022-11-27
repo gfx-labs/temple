@@ -1,7 +1,9 @@
 package sanctum
 
 import (
+	"bytes"
 	"fmt"
+	"go/format"
 	"log"
 	"path/filepath"
 	"strings"
@@ -169,6 +171,7 @@ func (t *Sanctum) Prepare(p *Prayer) {
 	}
 }
 func (t *Sanctum) Pray() error {
+	var buf bytes.Buffer
 	for _, v := range t.foyer.Prayers {
 		output, err := t.execute(v.Input, v.Obj, v.Args...)
 		if err != nil {
@@ -178,17 +181,33 @@ func (t *Sanctum) Pray() error {
 		if err != nil {
 			log.Printf("WARNING: mkdirall failed (%s)", err)
 		}
-		file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
+		err = func() error {
+			file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
+			if err != nil {
+				return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			}
+			defer file.Close()
+			err = file.Truncate(0)
+			if err != nil {
+				return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			}
+
+			buf.Reset()
+			buf.WriteString(fmt.Sprintf("package %s\n\n", v.PackageName))
+			buf.WriteString(output)
+			fmtd, err := format.Source(buf.Bytes())
+			if err != nil {
+				return fmt.Errorf("gofmt tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			}
+			_, err = file.Write(fmtd)
+			if err != nil {
+				return fmt.Errorf("write tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			}
+			return nil
+		}()
 		if err != nil {
-			return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			return err
 		}
-		defer file.Close()
-		err = file.Truncate(0)
-		if err != nil {
-			return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
-		}
-		file.WriteString(fmt.Sprintf("package %s\n\n", v.PackageName))
-		file.WriteString(output)
 	}
 	return nil
 }
