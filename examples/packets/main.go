@@ -13,12 +13,6 @@ import (
 
 //go:generate go run .
 
-//go:embed packets.tmpl
-var packetsTmpl string
-
-//go:embed types.tmpl
-var typesTmpl string
-
 func removeExt(v string) string {
 	ext := filepath.Ext(v)
 	return v[:len(v)-len(ext)]
