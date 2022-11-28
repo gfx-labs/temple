@@ -3,15 +3,15 @@ package main
 //go:generate go run .
 //go:generate cat ./maps/maps.go
 import (
+	"gfx.cafe/util/temple/lib/prayer"
 	"log"
 
 	"gfx.cafe/util/temple"
-	"gfx.cafe/util/temple/lib/sanctum"
 )
 
 func main() {
 	temple.RegisterTemplateDir(".")
-	temple.Prepare(&sanctum.GoPrayer{
+	temple.Prepare(&prayer.Go{
 		Input: "mapn",
 		Obj: map[string]any{
 			"Count": 10,
@@ -19,7 +19,7 @@ func main() {
 		Args:   nil,
 		Output: "./maps/maps.go",
 	})
-	temple.Prepare(&sanctum.GoPrayer{
+	temple.Prepare(&prayer.Go{
 		Input:  "sync_map",
 		Obj:    nil,
 		Args:   nil,

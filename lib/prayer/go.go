@@ -1,4 +1,4 @@
-package sanctum
+package prayer
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-type GoPrayer struct {
+type Go struct {
 	// Input specifies which template to use.
 	Input string
 	// Obj is the data that will be passed into the template.
@@ -20,19 +20,19 @@ type GoPrayer struct {
 	Output string
 }
 
-func (g *GoPrayer) Template() string {
+func (g *Go) Template() string {
 	return g.Input
 }
 
-func (g *GoPrayer) Object() any {
+func (g *Go) Object() any {
 	return g.Obj
 }
 
-func (g *GoPrayer) Arguments() []any {
+func (g *Go) Arguments() []any {
 	return g.Args
 }
 
-func (g *GoPrayer) Format(bytes []byte) ([]byte, error) {
+func (g *Go) Format(bytes []byte) ([]byte, error) {
 	pkg := g.Package
 	if pkg == "" {
 		pkg = filepath.Base(filepath.Dir(g.Output))
@@ -43,8 +43,8 @@ func (g *GoPrayer) Format(bytes []byte) ([]byte, error) {
 	))
 }
 
-func (g *GoPrayer) FileName() string {
+func (g *Go) FileName() string {
 	return g.Output
 }
 
-var _ Prayer = (*GoPrayer)(nil)
+var _ Prayer = (*Go)(nil)

@@ -2,6 +2,7 @@ package sanctum
 
 import (
 	"fmt"
+	"gfx.cafe/util/temple/lib/prayer"
 	"log"
 	"path/filepath"
 	"strings"
@@ -23,17 +24,7 @@ type Sanctum struct {
 }
 
 type Foyer struct {
-	Prayers []Prayer
-}
-
-type Prayer interface {
-	Template() string
-	Object() any
-	Arguments() []any
-
-	Format([]byte) ([]byte, error)
-
-	FileName() string
+	Prayers []prayer.Prayer
 }
 
 var defaultFuncs = template.FuncMap{
@@ -181,7 +172,7 @@ func (t *Sanctum) RegisterFuncVar(s string, val any) {
 }
 
 // Prepare queues a Prayer for execution
-func (t *Sanctum) Prepare(p Prayer) {
+func (t *Sanctum) Prepare(p prayer.Prayer) {
 	if p != nil {
 		t.foyer.Prayers = append(t.foyer.Prayers, p)
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"gfx.cafe/util/temple/lib/prayer"
 	"gfx.cafe/util/temple/lib/sanctum"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
@@ -77,7 +78,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	t.Prepare(&sanctum.GoPrayer{
+	t.Prepare(&prayer.Go{
 		Input: "types",
 		Obj:   ty,
 
@@ -105,7 +106,7 @@ func main() {
 		v["Types"] = ty["Types"]
 		v["Name"] = strcase.ToCamel(fmt.Sprintf("%s_%s", stateName, directionName))
 
-		t.Prepare(&sanctum.GoPrayer{
+		t.Prepare(&prayer.Go{
 			Input: "packets",
 			Obj:   v,
 

@@ -1,6 +1,6 @@
-package sanctum
+package prayer
 
-type RawPrayer struct {
+type Raw struct {
 	// Input specifies which template to use.
 	Input string
 	// Obj is the data that will be passed into the template.
@@ -12,24 +12,24 @@ type RawPrayer struct {
 	Output string
 }
 
-func (r *RawPrayer) Template() string {
+func (r *Raw) Template() string {
 	return r.Input
 }
 
-func (r *RawPrayer) Object() any {
+func (r *Raw) Object() any {
 	return r.Obj
 }
 
-func (r *RawPrayer) Arguments() []any {
+func (r *Raw) Arguments() []any {
 	return r.Args
 }
 
-func (r *RawPrayer) Format(bytes []byte) ([]byte, error) {
+func (r *Raw) Format(bytes []byte) ([]byte, error) {
 	return bytes, nil
 }
 
-func (r *RawPrayer) FileName() string {
+func (r *Raw) FileName() string {
 	return r.Output
 }
 
-var _ Prayer = (*RawPrayer)(nil)
+var _ Prayer = (*Raw)(nil)

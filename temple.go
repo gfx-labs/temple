@@ -1,6 +1,7 @@
 package temple
 
 import (
+	"gfx.cafe/util/temple/lib/prayer"
 	"gfx.cafe/util/temple/lib/preset"
 	"gfx.cafe/util/temple/lib/sanctum"
 )
@@ -38,7 +39,7 @@ func RegisterFuncVar(s string, val any) {
 	Sanctum.RegisterFuncVar(s, val)
 }
 
-func Prepare(p sanctum.Prayer) {
+func Prepare(p prayer.Prayer) {
 	Sanctum.Prepare(p)
 }
 

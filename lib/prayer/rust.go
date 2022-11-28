@@ -1,8 +1,10 @@
-package sanctum
+package prayer
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
-type RustPrayer struct {
+type Rust struct {
 	// Input specifies which template to use.
 	Input string
 	// Obj is the data that will be passed into the template.
@@ -14,19 +16,19 @@ type RustPrayer struct {
 	Output string
 }
 
-func (r *RustPrayer) Template() string {
+func (r *Rust) Template() string {
 	return r.Input
 }
 
-func (r *RustPrayer) Object() any {
+func (r *Rust) Object() any {
 	return r.Obj
 }
 
-func (r *RustPrayer) Arguments() []any {
+func (r *Rust) Arguments() []any {
 	return r.Args
 }
 
-func (r *RustPrayer) Format(bytes []byte) ([]byte, error) {
+func (r *Rust) Format(bytes []byte) ([]byte, error) {
 	fmt := exec.Command("rustfmt")
 	in, err := fmt.StdinPipe()
 	if err != nil {
@@ -43,8 +45,8 @@ func (r *RustPrayer) Format(bytes []byte) ([]byte, error) {
 	return fmt.Output()
 }
 
-func (r *RustPrayer) FileName() string {
+func (r *Rust) FileName() string {
 	return r.Output
 }
 
-var _ Prayer = (*RustPrayer)(nil)
+var _ Prayer = (*Rust)(nil)
