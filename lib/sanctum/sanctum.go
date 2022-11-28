@@ -3,7 +3,6 @@ package sanctum
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"log"
 	"path/filepath"
 	"strings"
@@ -29,13 +28,22 @@ type Foyer struct {
 }
 
 type Prayer struct {
+	// Input specifies which template to use.
 	Input string
-	Obj   any
-	Args  []any
+	// Obj is the data that will be passed into the template.
+	Obj any
+	// Args will be accessible within the template as arg0, arg1, argN...
+	Args []any
+	// Formatter defines which formatter to use (for go output use format.Source aka gofmt).
+	// Setting to nil will use no formatter.
+	Formatter func([]byte) ([]byte, error)
 
+	// PackagePath defines which directory to place the output of this prayer.
 	PackagePath string
+	// PackageName defines the name of the package for this prayer.
 	PackageName string
-	FileName    string
+	// FileName defines the file to place the output of this prayer.
+	FileName string
 }
 
 var defaultFuncs = template.FuncMap{
@@ -115,6 +123,7 @@ func (t *Sanctum) FS() afero.Fs {
 	return t.fs
 }
 
+// ReadObjectFile reads the file at path as yaml and unmarshal it into item
 func (t *Sanctum) ReadObjectFile(item any, path ...string) error {
 	bts, err := afero.ReadFile(t.fs, filepath.Join(path...))
 	if err != nil {
@@ -123,17 +132,20 @@ func (t *Sanctum) ReadObjectFile(item any, path ...string) error {
 	return yaml.Unmarshal(bts, item)
 }
 
+// RegisterTemplateFile reads the file at name and registers it as a template using the file's base name (without the extension)
 func (t *Sanctum) RegisterTemplateFile(name string) {
 	bts, err := afero.ReadFile(t.fs, name)
 	if err != nil {
 		return
 	}
 	name = filepath.Base(name)
-	name = strings.TrimSuffix(name, ".tmpl")
-	name = strings.TrimSuffix(name, ".gotmpl")
+	// trim extension
+	name = name[:len(name)-len(filepath.Ext(name))]
 	sbts := string(bts)
 	t.RegisterTemplate(name, sbts)
 }
+
+// RegisterTemplateDir scans for files ending in .gotmpl or .tmpl and registers them as templates
 func (t *Sanctum) RegisterTemplateDir(path string) {
 	files, err := afero.ReadDir(t.fs, path)
 	if err != nil {
@@ -153,6 +165,8 @@ func (t *Sanctum) RegisterTemplateDir(path string) {
 		}
 	}
 }
+
+// RegisterTemplate registers the template using name
 func (t *Sanctum) RegisterTemplate(name string, content string) {
 	t.template[name] = strings.Trim(strings.TrimSpace(content), "\n")
 }
@@ -160,16 +174,32 @@ func (t *Sanctum) RegisterTemplate(name string, content string) {
 func (t *Sanctum) RegisterFunc(s string, fn any) {
 	t.fm[s] = fn
 }
+
+func (t *Sanctum) RegisterFuncs(m template.FuncMap) {
+	for s, fn := range m {
+		t.RegisterFunc(s, fn)
+	}
+}
+
 func (t *Sanctum) RegisterFuncVar(s string, val any) {
 	t.fm[s] = func() any {
 		return val
 	}
 }
+
+// Prepare queues a Prayer for execution
 func (t *Sanctum) Prepare(p *Prayer) {
 	if p != nil {
 		t.foyer.Prayers = append(t.foyer.Prayers, *p)
 	}
 }
+
+// Curse discards all current Prayer without executing them
+func (t *Sanctum) Curse() {
+	t.foyer.Prayers = t.foyer.Prayers[:0]
+}
+
+// Pray executes all current Prayer
 func (t *Sanctum) Pray() error {
 	var buf bytes.Buffer
 	for _, v := range t.foyer.Prayers {
@@ -195,9 +225,14 @@ func (t *Sanctum) Pray() error {
 			buf.Reset()
 			buf.WriteString(fmt.Sprintf("package %s\n\n", v.PackageName))
 			buf.WriteString(output)
-			fmtd, err := format.Source(buf.Bytes())
-			if err != nil {
-				return fmt.Errorf("gofmt tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			var fmtd []byte
+			if v.Formatter != nil {
+				fmtd, err = v.Formatter(buf.Bytes())
+				if err != nil {
+					return fmt.Errorf("gofmt tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+				}
+			} else {
+				fmtd = buf.Bytes()
 			}
 			_, err = file.Write(fmtd)
 			if err != nil {
