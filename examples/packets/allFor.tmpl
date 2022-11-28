@@ -1,0 +1,14 @@
+{{$name := (index . 0) -}}
+{{$type := (index . 1) -}}
+
+type {{$name}} {{template "typeFor" $type}}
+
+func (T *{{$name}}) Marshal(writer io.Writer) (err error) {
+	{{template "marshalFor" (list "(*T)" $type emptyMap $name 0) -}}
+	return
+}
+
+func (T *{{$name}}) Unmarshal(reader io.Reader) (err error) {
+	{{template "unmarshalFor" (list "(*T)" $type emptyMap $name 0) -}}
+	return
+}

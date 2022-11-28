@@ -1,0 +1,82 @@
+{{$variable := (index . 0) -}}
+{{$type := (index . 1) -}}
+{{$map := (index . 2) -}}
+{{$name := (index . 3) -}}
+{{$temp := (index . 4) -}}
+
+{{$_ := setMap $map $type.Name $variable -}}
+
+{{if $type.Type -}}
+    {{if isGeneratedType $type.Type -}}
+		err = {{$variable}}.Marshal(writer)
+    {{else -}}
+		err = types.Marshal{{upperCamel $type.Type}}(writer, {{$type.Type}}({{$variable}}))
+    {{end -}}
+	if err != nil {
+		return
+	}
+{{else if $type.Slice -}}
+    {{if $type.Slice.Prefix -}}
+		{
+			length := {{$type.Slice.Prefix}}(len({{$variable}}))
+			{{if isGeneratedType $type.Slice.Prefix -}}
+				err = length.Marshal(writer)
+			{{else -}}
+				err = types.Marshal{{upperCamel $type.Slice.Prefix}}(writer, length)
+			{{end -}}
+			if err != nil {
+				return
+			}
+			{{$iName := printf "temp%d" $temp -}}
+			{{$temp = add $temp 1 -}}
+			for _, {{$iName}} := range {{$variable}} {
+				{{template "marshalFor" (list $iName $type.Slice (cloneMap $map) "" $temp) -}}
+			}
+		}
+    {{else -}}
+        {{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		for _, {{$iName}} := range {{$variable}} {
+        	{{template "marshalFor" (list $iName $type.Slice $map "" $temp) -}}
+		}
+    {{end -}}
+{{else if $type.Optional -}}
+	if {{$variable}}.inner == nil {
+		err = types.MarshalBool(writer, false)
+		if err != nil {
+			return
+		}
+	} else {
+		err = types.MarshalBool(writer, true)
+		if err != nil {
+			return
+		}
+		{{template "marshalFor" (list (printf "(*%s.inner)" $variable) $type.Optional (cloneMap $map) "" $temp) -}}
+	}
+{{else if $type.Array -}}
+    {{$iName := printf "temp%d" $temp -}}
+    {{$temp = add $temp 1 -}}
+	for _, {{$iName}} := range {{$variable}} {
+    	{{template "marshalFor" (list $iName $type.Array (cloneMap $map) "" $temp) -}}
+	}
+{{else if $type.Struct -}}
+    {{range $idx, $field := $type.Struct -}}
+        {{if $field.When -}}
+			if {{template "eval" (list $map $variable $field.When)}} {
+        {{end -}}
+        {{template "marshalFor" (list (printf "%s.%s" $variable (upperCamel $field.Name)) $field $map "" $temp) -}}
+        {{if $field.When -}}
+			}
+        {{end -}}
+    {{end -}}
+{{else if $type.Enum -}}
+    {{$iName := printf "temp%d" $temp -}}
+    {{$temp = add $temp 1 -}}
+	switch {{getMap $map $type.Enum.Discriminator}} {
+    {{range $key, $variant := $type.Enum.Variants -}}
+		case {{if isString $key}}"{{end}}{{$key}}{{if isString $key}}"{{end}}:
+			{{$iName}} := {{$variable}}.({{template "typeFor" $variant}})
+			{{template "marshalFor" (list $iName $variant (cloneMap $map) "" $temp) -}}
+    {{end -}}
+	}
+{{end -}}

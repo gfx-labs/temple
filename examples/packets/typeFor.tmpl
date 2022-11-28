@@ -1,0 +1,21 @@
+{{if .Type -}}
+    {{.Type -}}
+{{else if .Slice -}}
+	[]{{template "typeFor" .Slice -}}
+{{else if .Optional -}}
+	struct {
+		inner *{{template "typeFor" .Optional}}
+	}
+{{- else if .Array -}}
+	[{{.Array.Length}}]{{template "typeFor" .Array -}}
+{{else if .Struct -}}
+	struct {
+    {{range $idx, $field := .Struct -}}
+        {{upperCamel $field.Name}} {{template "typeFor" $field}}
+    {{end -}}
+	}
+{{- else if .Enum -}}
+	any
+{{- else -}}
+	struct{}
+{{- end -}}

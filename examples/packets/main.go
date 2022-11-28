@@ -6,6 +6,7 @@ import (
 	"gfx.cafe/util/temple/lib/sanctum"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
+	"go/format"
 	"io/fs"
 	"path/filepath"
 )
@@ -24,9 +25,8 @@ func removeExt(v string) string {
 }
 
 func main() {
-	t := sanctum.New("./spec")
-	t.RegisterTemplate("packets", packetsTmpl)
-	t.RegisterTemplate("types", typesTmpl)
+	t := sanctum.New(".")
+	t.RegisterTemplateDir(".")
 	t.RegisterFunc(
 		"isCustomType", func(v string) bool {
 			switch v {
@@ -80,22 +80,30 @@ func main() {
 		})
 
 	var ty map[string]any
-	err := t.ReadObjectFile(&ty, "types.yaml")
+	err := t.ReadObjectFile(&ty, "spec/types.yaml")
+	if err != nil {
+		panic(err)
+	}
 	t.Prepare(&sanctum.Prayer{
-		Input: "types",
-		Obj:   ty,
+		Input:     "types",
+		Obj:       ty,
+		Formatter: format.Source,
 
+		PackagePath: "out",
 		PackageName: "packets",
 		FileName:    "types.go",
 	})
 
-	err = afero.Walk(t.FS(), "", func(path string, info fs.FileInfo, err error) error {
+	err = afero.Walk(t.FS(), "spec", func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() || path == "types.yaml" {
+		if info.IsDir() || filepath.Base(path) == "types.yaml" {
 			return nil
 		}
+
+		stateName := filepath.Base(filepath.Dir(path))
+		directionName := removeExt(filepath.Base(path))
 
 		var v map[string]any
 		err = t.ReadObjectFile(&v, path)
@@ -103,17 +111,15 @@ func main() {
 			return err
 		}
 
-		stateName := filepath.Dir(path)
-		directionName := removeExt(filepath.Base(path))
-
 		v["Types"] = ty["Types"]
 		v["Name"] = strcase.ToCamel(fmt.Sprintf("%s_%s", stateName, directionName))
 
 		t.Prepare(&sanctum.Prayer{
-			Input: "packets",
-			Obj:   v,
+			Input:     "packets",
+			Obj:       v,
+			Formatter: format.Source,
 
-			PackagePath: filepath.Join(stateName, directionName),
+			PackagePath: filepath.Join("out", stateName, directionName),
 			PackageName: stateName + "_" + directionName,
 			FileName:    "packets.go",
 		})

@@ -1,0 +1,39 @@
+{{$map := (index . 0) -}}
+{{$variable := (index . 1) -}}
+{{$condition := (index . 2) -}}
+
+{{if $condition.Field -}}
+    {{getMap $map $condition.Field}}
+{{- else if some $condition.Value -}}
+    {{$condition.Value}}
+{{- else if $condition.Equal -}}
+	({{template "eval" (list $map $variable (index $condition.Equal 0))}}) == ({{template "eval" (list $map $variable (index $condition.Equal 1))}})
+{{- else if $condition.NotEqual -}}
+	({{template "eval" (list $map $variable (index $condition.NotEqual 0))}}) != ({{template "eval" (list $map $variable (index $condition.NotEqual 1))}})
+{{- else if $condition.LessThan -}}
+	({{template "eval" (list $map $variable (index $condition.LessThan 0))}}) < ({{template "eval" (list $map $variable (index $condition.LessThan 1))}})
+{{- else if $condition.GreaterThan -}}
+	({{template "eval" (list $map $variable (index $condition.GreaterThan 0))}}) > ({{template "eval" (list $map $variable (index $condition.GreaterThan 1))}})
+{{- else if $condition.And -}}
+	({{template "eval" (list $map $variable (index $condition.And 0))}}) & ({{template "eval" (list $map $variable (index $condition.And 1))}})
+{{- else if $condition.Multiply -}}
+    {{$first := true -}}
+    {{range $idx, $operand := $condition.Multiply -}}
+        {{if $first -}}
+            {{$first = false}}
+        {{- else -}}
+			*
+        {{- end -}}
+		({{template "eval" (list $map $variable $operand)}})
+    {{- end -}}
+{{- else if $condition.Or -}}
+    {{$first := true -}}
+    {{range $idx, $operand := $condition.Or -}}
+        {{if $first -}}
+            {{$first = false}}
+        {{- else -}}
+			||
+        {{- end -}}
+		({{template "eval" (list $map $variable $operand)}})
+    {{- end -}}
+{{- end -}}

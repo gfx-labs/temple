@@ -1,0 +1,106 @@
+{{$variable := (index . 0) -}}
+{{$type := (index . 1) -}}
+{{$map := (index . 2) -}}
+{{$name := (index . 3) -}}
+{{$temp := (index . 4) -}}
+
+{{$_ := setMap $map $type.Name $variable -}}
+
+{{if $type.Type -}}
+    {{if isGeneratedType $type.Type -}}
+		err = {{$variable}}.Unmarshal(reader)
+    {{else -}}
+		{
+			var temp {{$type.Type}}
+			temp, err = types.Unmarshal{{upperCamel $type.Type}}(reader)
+			{{$variable}} = {{$name}}(temp)
+		}
+    {{end -}}
+	if err != nil {
+		return
+	}
+{{else if $type.Slice -}}
+    {{if $type.Slice.Prefix -}}
+		{
+			{{if isGeneratedType $type.Slice.Prefix -}}
+				var length {{$type.Slice.Prefix}}
+				err = length.Unmarshal(reader)
+			{{else -}}
+				var length {{$type.Slice.Prefix}}
+				length, err = types.Unmarshal{{upperCamel $type.Slice.Prefix}}(reader)
+			{{end -}}
+			if err != nil {
+				return
+			}
+			{{$variable}} = make({{template "typeFor" $type}}, int(length))
+			{{$iName := printf "temp%d" $temp -}}
+			{{$temp = add $temp 1 -}}
+			for {{$iName}} := range {{$variable}} {
+				{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Slice (cloneMap $map) "" $temp) -}}
+			}
+		}
+    {{else if $type.Slice.SizeFunc -}}
+        {{$variable}} = make({{template "typeFor" $type}}, {{template "eval" (list $map $variable $type.Slice.SizeFunc)}})
+        {{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		for {{$iName}} := range {{$variable}} {
+        	{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Slice (cloneMap $map) "" $temp) -}}
+		}
+    {{else if $type.Slice.Until -}}
+        {{$iName := printf "temp%d" $temp -}}
+        {{$temp = add $temp 1 -}}
+		for {
+			{{$iName}} := *new({{template "typeFor" $type.Slice}})
+			{{template "unmarshalFor" (list $iName $type.Slice $map "" $temp) -}}
+
+			{{$variable}} = append({{$variable}}, {{$iName}})
+			if {{template "eval" (list $map $iName $type.Slice.Until)}} {
+				break
+			}
+		}
+    {{else -}}
+        {{$variable}}, err = io.ReadAll(reader)
+		if err != nil {
+			return
+		}
+    {{end -}}
+{{else if $type.Optional -}}
+	{
+		var exists bool
+		exists, err = types.UnmarshalBool(reader)
+		if err != nil {
+			return
+		}
+		if exists {
+			{{$variable}}.inner = new({{template "typeFor" $type.Optional}})
+			{{template "unmarshalFor" (list (printf "(*%s.inner)" $variable) $type.Optional (cloneMap $map) "" $temp) -}}
+		}
+	}
+{{else if $type.Array -}}
+    {{$iName := printf "temp%d" $temp -}}
+    {{$temp = add $temp 1 -}}
+	for {{$iName}} := range {{$variable}} {
+    	{{template "unmarshalFor" (list (printf "%s[%s]" $variable $iName) $type.Array (cloneMap $map) "" $temp) -}}
+	}
+{{else if $type.Struct -}}
+    {{range $idx, $field := $type.Struct -}}
+        {{if $field.When -}}
+			if {{template "eval" (list $map $variable $field.When)}} {
+        {{end -}}
+        {{template "unmarshalFor" (list (printf "%s.%s" $variable (upperCamel $field.Name)) $field $map "" $temp) -}}
+        {{if $field.When -}}
+			}
+        {{end -}}
+    {{end -}}
+{{else if $type.Enum -}}
+    {{$iName := printf "temp%d" $temp -}}
+    {{$temp = add $temp 1 -}}
+	switch {{getMap $map $type.Enum.Discriminator}} {
+    {{range $key, $variant := $type.Enum.Variants -}}
+		case {{if isString $key}}"{{end}}{{$key}}{{if isString $key}}"{{end}}:
+			var {{$iName}} {{template "typeFor" $variant}}
+			{{template "unmarshalFor" (list $iName $variant (cloneMap $map) "" $temp) -}}
+			{{$variable}} = {{$iName}}
+    {{end -}}
+	}
+{{end -}}
