@@ -6,7 +6,6 @@ import (
 	"gfx.cafe/util/temple/lib/sanctum"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
-	"go/format"
 	"io/fs"
 	"path/filepath"
 )
@@ -78,14 +77,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	t.Prepare(&sanctum.Prayer{
-		Input:     "types",
-		Obj:       ty,
-		Formatter: format.Source,
+	t.Prepare(&sanctum.GoPrayer{
+		Input: "types",
+		Obj:   ty,
 
-		PackagePath: "out",
-		PackageName: "packets",
-		FileName:    "types.go",
+		Package: "packets",
+		Output:  "out/types.go",
 	})
 
 	err = afero.Walk(t.FS(), "spec", func(path string, info fs.FileInfo, err error) error {
@@ -108,14 +105,12 @@ func main() {
 		v["Types"] = ty["Types"]
 		v["Name"] = strcase.ToCamel(fmt.Sprintf("%s_%s", stateName, directionName))
 
-		t.Prepare(&sanctum.Prayer{
-			Input:     "packets",
-			Obj:       v,
-			Formatter: format.Source,
+		t.Prepare(&sanctum.GoPrayer{
+			Input: "packets",
+			Obj:   v,
 
-			PackagePath: filepath.Join("out", stateName, directionName),
-			PackageName: stateName + "_" + directionName,
-			FileName:    "packets.go",
+			Package: stateName + "_" + directionName,
+			Output:  filepath.Join("out", stateName, directionName, "packets.go"),
 		})
 
 		return nil

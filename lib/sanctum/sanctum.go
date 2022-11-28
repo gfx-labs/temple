@@ -1,7 +1,6 @@
 package sanctum
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -27,23 +26,14 @@ type Foyer struct {
 	Prayers []Prayer
 }
 
-type Prayer struct {
-	// Input specifies which template to use.
-	Input string
-	// Obj is the data that will be passed into the template.
-	Obj any
-	// Args will be accessible within the template as arg0, arg1, argN...
-	Args []any
-	// Formatter defines which formatter to use (for go output use format.Source aka gofmt).
-	// Setting to nil will use no formatter.
-	Formatter func([]byte) ([]byte, error)
+type Prayer interface {
+	Template() string
+	Object() any
+	Arguments() []any
 
-	// PackagePath defines which directory to place the output of this prayer.
-	PackagePath string
-	// PackageName defines the name of the package for this prayer.
-	PackageName string
-	// FileName defines the file to place the output of this prayer.
-	FileName string
+	Format([]byte) ([]byte, error)
+
+	FileName() string
 }
 
 var defaultFuncs = template.FuncMap{
@@ -191,9 +181,9 @@ func (t *Sanctum) RegisterFuncVar(s string, val any) {
 }
 
 // Prepare queues a Prayer for execution
-func (t *Sanctum) Prepare(p *Prayer) {
+func (t *Sanctum) Prepare(p Prayer) {
 	if p != nil {
-		t.foyer.Prayers = append(t.foyer.Prayers, *p)
+		t.foyer.Prayers = append(t.foyer.Prayers, p)
 	}
 }
 
@@ -204,42 +194,33 @@ func (t *Sanctum) Curse() {
 
 // Pray executes all current Prayer
 func (t *Sanctum) Pray() error {
-	var buf bytes.Buffer
 	for _, v := range t.foyer.Prayers {
-		output, err := t.execute(v.Input, v.Obj, v.Args...)
+		output, err := t.execute(v.Template(), v.Object(), v.Arguments()...)
 		if err != nil {
-			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 		}
-		err = t.fs.MkdirAll(v.PackagePath, 0o744)
+		err = t.fs.MkdirAll(filepath.Dir(v.FileName()), 0o744)
 		if err != nil {
 			log.Printf("WARNING: mkdirall failed (%s)", err)
 		}
 		err = func() error {
-			file, err := t.fs.Create(filepath.Join(v.PackagePath, v.FileName))
+			file, err := t.fs.Create(v.FileName())
 			if err != nil {
-				return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+				return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 			}
 			defer file.Close()
 			err = file.Truncate(0)
 			if err != nil {
-				return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+				return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 			}
 
-			buf.Reset()
-			buf.WriteString(fmt.Sprintf("package %s\n\n", v.PackageName))
-			buf.WriteString(output)
-			var fmtd []byte
-			if v.Formatter != nil {
-				fmtd, err = v.Formatter(buf.Bytes())
-				if err != nil {
-					return fmt.Errorf("gofmt tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
-				}
-			} else {
-				fmtd = buf.Bytes()
+			fmtd, err := v.Format([]byte(output))
+			if err != nil {
+				return fmt.Errorf("fmt tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 			}
 			_, err = file.Write(fmtd)
 			if err != nil {
-				return fmt.Errorf("write tmpl=%s obj=%+v args=%v err=%w", v.Input, v.Obj, v.Args, err)
+				return fmt.Errorf("write tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 			}
 			return nil
 		}()

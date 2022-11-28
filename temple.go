@@ -38,7 +38,7 @@ func RegisterFuncVar(s string, val any) {
 	Sanctum.RegisterFuncVar(s, val)
 }
 
-func Prepare(p *sanctum.Prayer) {
+func Prepare(p sanctum.Prayer) {
 	Sanctum.Prepare(p)
 }
 
