@@ -107,16 +107,19 @@ var defaultFuncs = template.FuncMap{
 	},
 }
 
-func New(path string) *Sanctum {
-	s := &Sanctum{
+func NewWithFS(fs afero.Fs) *Sanctum {
+	return &Sanctum{
 		template: map[string]string{},
 		fm:       defaultFuncs,
-		fs:       afero.NewBasePathFs(afero.NewOsFs(), path),
+		fs:       fs,
 	}
+}
+
+func New(path string) *Sanctum {
 	if filepath.Clean(path) == "." {
-		s.fs = afero.NewOsFs()
+		return NewWithFS(afero.NewOsFs())
 	}
-	return s
+	return NewWithFS(afero.NewBasePathFs(afero.NewOsFs(), path))
 }
 
 func (t *Sanctum) FS() afero.Fs {
