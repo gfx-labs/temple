@@ -34,15 +34,11 @@ func (r *Rust) Format(bytes []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = in.Write(bytes)
-	if err != nil {
-		return nil, err
-	}
-	err = in.Close()
-	if err != nil {
-		return nil, err
-	}
-	return fmt.Output()
+	go func() {
+		defer in.Close()
+		in.Write(bytes)
+	}()
+	return fmt.CombinedOutput()
 }
 
 func (r *Rust) FileName() string {
