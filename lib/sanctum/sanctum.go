@@ -2,17 +2,18 @@ package sanctum
 
 import (
 	"fmt"
-	"gfx.cafe/util/temple/lib/prayer"
 	"log"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"gfx.cafe/util/temple/lib/prayer"
+
 	"github.com/Masterminds/sprig/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
 	"github.com/spf13/cast"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 type Sanctum struct {
