@@ -7,6 +7,8 @@ type Raw struct {
 	Obj any
 	// Args will be accessible within the template as arg0, arg1, argN...
 	Args []any
+	// Formatter will be called to format and validate the output of the template.
+	Formatter func([]byte) ([]byte, error)
 
 	// Output defines the file name to place the output of this prayer.
 	Output string
@@ -25,7 +27,11 @@ func (r *Raw) Arguments() []any {
 }
 
 func (r *Raw) Format(bytes []byte) ([]byte, error) {
-	return bytes, nil
+	if r.Formatter == nil {
+		return bytes, nil
+	}
+
+	return r.Formatter(bytes)
 }
 
 func (r *Raw) FileName() string {
