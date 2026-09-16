@@ -1,9 +1,9 @@
 package temple
 
 import (
-	"gfx.cafe/util/temple/lib/prayer"
-	"gfx.cafe/util/temple/lib/preset"
-	"gfx.cafe/util/temple/lib/sanctum"
+	"github.com/gfx-labs/temple/lib/prayer"
+	"github.com/gfx-labs/temple/lib/preset"
+	"github.com/gfx-labs/temple/lib/sanctum"
 )
 
 var Sanctum *sanctum.Sanctum

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"gfx.cafe/util/temple/lib/prayer"
+	"github.com/gfx-labs/temple/lib/prayer"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/iancoleman/strcase"

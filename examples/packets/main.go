@@ -3,8 +3,8 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"gfx.cafe/util/temple/lib/prayer"
-	"gfx.cafe/util/temple/lib/sanctum"
+	"github.com/gfx-labs/temple/lib/prayer"
+	"github.com/gfx-labs/temple/lib/sanctum"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/afero"
 	"io/fs"

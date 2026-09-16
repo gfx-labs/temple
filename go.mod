@@ -1,4 +1,4 @@
-module gfx.cafe/util/temple
+module github.com/gfx-labs/temple
 
 go 1.21
 

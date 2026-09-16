@@ -1,6 +1,6 @@
 package preset
 
-import "gfx.cafe/util/temple/lib/sanctum"
+import "github.com/gfx-labs/temple/lib/sanctum"
 
 type Preset interface {
 	Bind(*sanctum.Sanctum)

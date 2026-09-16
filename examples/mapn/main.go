@@ -3,10 +3,10 @@ package main
 //go:generate go run .
 //go:generate cat ./maps/maps.go
 import (
-	"gfx.cafe/util/temple/lib/prayer"
+	"github.com/gfx-labs/temple/lib/prayer"
 	"log"
 
-	"gfx.cafe/util/temple"
+	"github.com/gfx-labs/temple"
 )
 
 func main() {
