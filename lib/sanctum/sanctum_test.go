@@ -80,3 +80,13 @@ func TestArgs(t *testing.T) {
 		t.Fatalf("got %q", got)
 	}
 }
+
+func TestGoOutputInCurrentDir(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	s := NewWithFS(fs)
+	s.RegisterTemplate("t", "var X = 1")
+	s.Prepare(&prayer.Go{Input: "t", Output: "x.go"})
+	if err := s.Pray(); err != nil {
+		t.Fatal(err)
+	}
+}

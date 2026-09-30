@@ -193,12 +193,12 @@ func (t *Sanctum) Pray() error {
 	for _, v := range t.foyer.Prayers {
 		output, err := t.execute(v.Template(), v.Object(), v.Arguments()...)
 		if err != nil {
-			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
+			return fmt.Errorf("exec tmpl=%s file=%s: %w", v.Template(), v.FileName(), err)
 		}
 		// format before touching the file so a failure keeps the previous output
 		fmtd, err := v.Format([]byte(output))
 		if err != nil {
-			return fmt.Errorf("fmt tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
+			return fmt.Errorf("fmt tmpl=%s file=%s: %w", v.Template(), v.FileName(), err)
 		}
 		err = t.fs.MkdirAll(filepath.Dir(v.FileName()), 0o755)
 		if err != nil {

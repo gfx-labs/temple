@@ -35,7 +35,11 @@ func (g *Go) Arguments() []any {
 func (g *Go) Format(bytes []byte) ([]byte, error) {
 	pkg := g.Package
 	if pkg == "" {
-		pkg = filepath.Base(filepath.Dir(g.Output))
+		dir, err := filepath.Abs(filepath.Dir(g.Output))
+		if err != nil {
+			return nil, err
+		}
+		pkg = filepath.Base(dir)
 	}
 	src := fmt.Sprintf("package %s\n\n%s", pkg, string(bytes))
 	return format.Source([]byte(
