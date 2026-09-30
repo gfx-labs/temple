@@ -41,11 +41,7 @@ func (m *Map[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 // LoadOrStore returns the existing value for the key if present. Otherwise, it stores and returns the given value. The loaded result is true if the value was loaded, false if stored.
 func (m *Map[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 	val, loaded := m.inner.LoadOrStore(key, value)
-	if loaded {
-		return val.(V), loaded
-	}
-	var def V
-	return def, loaded
+	return val.(V), loaded
 }
 
 // Range calls f sequentially for each key and value present in the map.
