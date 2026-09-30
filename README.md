@@ -63,4 +63,4 @@ or implement `prayer.Prayer` yourself.
 see `examples/`:
 
 - `mapn` - generates typed n-key nested sync maps
-- `packets` - generates packet marshal/unmarshal code from yaml specs
+- `enums` - generates go enums (String, Parse, text marshaling) from a yaml file. good starting point

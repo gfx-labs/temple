@@ -1,0 +1,7 @@
+Enums:
+  - Name: color
+    Values: [red, green, blue]
+  - Name: http_method
+    Values: [get, post, put, patch, delete]
+  - Name: log_level
+    Values: [debug, info, warn, error]

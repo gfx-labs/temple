@@ -1,0 +1,43 @@
+{{$type := upperCamel .Name -}}
+type {{$type}} int
+
+const (
+{{- range $i, $v := .Values}}
+	{{$type}}{{upperCamel $v}}{{if eq $i 0}} {{$type}} = iota{{end}}
+{{- end}}
+)
+
+var {{lowerCamel .Name}}Names = [...]string{
+{{- range .Values}}
+	{{quote .}},
+{{- end}}
+}
+
+func (e {{$type}}) String() string {
+	if e < 0 || int(e) >= len({{lowerCamel .Name}}Names) {
+		return fmt.Sprintf("{{$type}}(%d)", int(e))
+	}
+	return {{lowerCamel .Name}}Names[e]
+}
+
+func Parse{{$type}}(s string) ({{$type}}, error) {
+	for i, n := range {{lowerCamel .Name}}Names {
+		if n == s {
+			return {{$type}}(i), nil
+		}
+	}
+	return 0, fmt.Errorf("invalid {{$type}}: %q", s)
+}
+
+func (e {{$type}}) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
+func (e *{{$type}}) UnmarshalText(b []byte) error {
+	v, err := Parse{{$type}}(string(b))
+	if err != nil {
+		return err
+	}
+	*e = v
+	return nil
+}
