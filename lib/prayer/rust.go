@@ -16,6 +16,8 @@ type Rust struct {
 
 	// Output defines the file path and name to place the output of this prayer.
 	Output string
+	// Edition is passed to rustfmt. Defaults to 2021.
+	Edition string
 }
 
 func (r *Rust) Template() string {
@@ -31,7 +33,11 @@ func (r *Rust) Arguments() []any {
 }
 
 func (r *Rust) Format(src []byte) ([]byte, error) {
-	cmd := exec.Command("rustfmt", "--emit", "stdout")
+	edition := r.Edition
+	if edition == "" {
+		edition = "2021"
+	}
+	cmd := exec.Command("rustfmt", "--emit", "stdout", "--edition", edition)
 	cmd.Stdin = bytes.NewReader(src)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
