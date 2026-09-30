@@ -2,7 +2,7 @@ package sanctum
 
 import (
 	"fmt"
-	"log"
+	"maps"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -92,7 +92,7 @@ var defaultFuncs = template.FuncMap{
 func NewWithFS(fs afero.Fs) *Sanctum {
 	return &Sanctum{
 		template: map[string]string{},
-		fm:       defaultFuncs,
+		fm:       maps.Clone(defaultFuncs),
 		fs:       fs,
 	}
 }
@@ -118,23 +118,24 @@ func (t *Sanctum) ReadObjectFile(item any, path ...string) error {
 }
 
 // RegisterTemplateFile reads the file at name and registers it as a template using the file's base name (without the extension)
-func (t *Sanctum) RegisterTemplateFile(name string) {
+func (t *Sanctum) RegisterTemplateFile(name string) error {
 	bts, err := afero.ReadFile(t.fs, name)
 	if err != nil {
-		return
+		return fmt.Errorf("register template file %s: %w", name, err)
 	}
 	name = filepath.Base(name)
 	// trim extension
 	name = name[:len(name)-len(filepath.Ext(name))]
 	sbts := string(bts)
 	t.RegisterTemplate(name, sbts)
+	return nil
 }
 
 // RegisterTemplateDir scans for files ending in .gotmpl or .tmpl and registers them as templates
-func (t *Sanctum) RegisterTemplateDir(path string) {
+func (t *Sanctum) RegisterTemplateDir(path string) error {
 	files, err := afero.ReadDir(t.fs, path)
 	if err != nil {
-		return
+		return fmt.Errorf("register template dir %s: %w", path, err)
 	}
 	for _, file := range files {
 		if file.IsDir() {
@@ -144,11 +145,14 @@ func (t *Sanctum) RegisterTemplateDir(path string) {
 
 		switch filepath.Ext(file.Name()) {
 		case ".gotmpl", ".tmpl":
-			t.RegisterTemplateFile(filepath.Join(path, file.Name()))
+			if err := t.RegisterTemplateFile(filepath.Join(path, file.Name())); err != nil {
+				return err
+			}
 		default:
 			continue
 		}
 	}
+	return nil
 }
 
 // RegisterTemplate registers the template using name
@@ -191,33 +195,18 @@ func (t *Sanctum) Pray() error {
 		if err != nil {
 			return fmt.Errorf("exec tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 		}
-		err = t.fs.MkdirAll(filepath.Dir(v.FileName()), 0o744)
+		// format before touching the file so a failure keeps the previous output
+		fmtd, err := v.Format([]byte(output))
 		if err != nil {
-			log.Printf("WARNING: mkdirall failed (%s)", err)
+			return fmt.Errorf("fmt tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
 		}
-		err = func() error {
-			file, err := t.fs.Create(v.FileName())
-			if err != nil {
-				return fmt.Errorf("openfile tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
-			}
-			defer file.Close()
-			err = file.Truncate(0)
-			if err != nil {
-				return fmt.Errorf("truncfile tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
-			}
-
-			fmtd, err := v.Format([]byte(output))
-			if err != nil {
-				return fmt.Errorf("fmt tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
-			}
-			_, err = file.Write(fmtd)
-			if err != nil {
-				return fmt.Errorf("write tmpl=%s obj=%+v args=%v err=%w", v.Template(), v.Object(), v.Arguments(), err)
-			}
-			return nil
-		}()
+		err = t.fs.MkdirAll(filepath.Dir(v.FileName()), 0o755)
 		if err != nil {
-			return err
+			return fmt.Errorf("mkdir tmpl=%s file=%s err=%w", v.Template(), v.FileName(), err)
+		}
+		err = afero.WriteFile(t.fs, v.FileName(), fmtd, 0o644)
+		if err != nil {
+			return fmt.Errorf("write tmpl=%s file=%s err=%w", v.Template(), v.FileName(), err)
 		}
 	}
 	return nil
@@ -235,7 +224,9 @@ func (t *Sanctum) execute(s string, obj any, args ...any) (string, error) {
 		Funcs(t.fm).
 		Funcs(tfm)
 	for name, v := range t.template {
-		tmp = template.Must(tmp.Parse(fmt.Sprintf(`{{define "%s"}}%s{{end}}`, name, v)))
+		if _, err := tmp.New(name).Parse(v); err != nil {
+			return "", fmt.Errorf("parse template %s: %w", name, err)
+		}
 	}
 	sb := new(strings.Builder)
 	err := tmp.ExecuteTemplate(sb, s, obj)

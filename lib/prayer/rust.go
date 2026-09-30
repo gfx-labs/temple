@@ -1,6 +1,8 @@
 package prayer
 
 import (
+	"bytes"
+	"fmt"
 	"os/exec"
 )
 
@@ -28,17 +30,16 @@ func (r *Rust) Arguments() []any {
 	return r.Args
 }
 
-func (r *Rust) Format(bytes []byte) ([]byte, error) {
-	fmt := exec.Command("rustfmt")
-	in, err := fmt.StdinPipe()
+func (r *Rust) Format(src []byte) ([]byte, error) {
+	cmd := exec.Command("rustfmt", "--emit", "stdout")
+	cmd.Stdin = bytes.NewReader(src)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("rustfmt: %w: %s", err, stderr.String())
 	}
-	go func() {
-		defer in.Close()
-		in.Write(bytes)
-	}()
-	return fmt.CombinedOutput()
+	return out, nil
 }
 
 func (r *Rust) FileName() string {

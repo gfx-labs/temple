@@ -18,14 +18,14 @@ func SelectPreset(p preset.Preset) {
 	curPreset = p
 }
 
-func ReadObjectFile(item any, path ...string) {
-	Sanctum.ReadObjectFile(item, path...)
+func ReadObjectFile(item any, path ...string) error {
+	return Sanctum.ReadObjectFile(item, path...)
 }
-func RegisterTemplateFile(name string) {
-	Sanctum.RegisterTemplateFile(name)
+func RegisterTemplateFile(name string) error {
+	return Sanctum.RegisterTemplateFile(name)
 }
-func RegisterTemplateDir(path string) {
-	Sanctum.RegisterTemplateDir(path)
+func RegisterTemplateDir(path string) error {
+	return Sanctum.RegisterTemplateDir(path)
 }
 func RegisterTemplate(name string, content string) {
 	Sanctum.RegisterTemplate(name, content)
