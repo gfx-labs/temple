@@ -90,3 +90,72 @@ func TestGoOutputInCurrentDir(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRegisterTemplateDirRecursive(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	afero.WriteFile(fs, "tmpl/a.tmpl", []byte("A{{template \"b\"}}"), 0o644)
+	afero.WriteFile(fs, "tmpl/sub/b.gotmpl", []byte("B"), 0o644)
+	afero.WriteFile(fs, "tmpl/sub/skip.txt", []byte("{{"), 0o644)
+	afero.WriteFile(fs, "tmpl/.hidden/c.tmpl", []byte("{{"), 0o644)
+	s := NewWithFS(fs)
+	if err := s.RegisterTemplateDir("tmpl"); err != nil {
+		t.Fatal(err)
+	}
+	s.Prepare(&prayer.Raw{Input: "a", Output: "x"})
+	if err := s.Pray(); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := afero.ReadFile(fs, "x")
+	if string(got) != "AB" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestRegisterTemplateDirDuplicateName(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	afero.WriteFile(fs, "tmpl/a.tmpl", []byte("1"), 0o644)
+	afero.WriteFile(fs, "tmpl/sub/a.tmpl", []byte("2"), 0o644)
+	if err := NewWithFS(fs).RegisterTemplateDir("tmpl"); err == nil {
+		t.Fatal("expected duplicate name error")
+	}
+}
+
+func TestPrayDequeues(t *testing.T) {
+	n := 0
+	s := NewWithFS(afero.NewMemMapFs())
+	s.RegisterFunc("count", func() int { n++; return n })
+	s.RegisterTemplate("t", "{{count}}")
+	s.Prepare(&prayer.Raw{Input: "t", Output: "x"})
+	if err := s.Pray(); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Pray(); err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Fatalf("rendered %d times", n)
+	}
+}
+
+func TestPrayKeepsFailedAndRemaining(t *testing.T) {
+	fs := afero.NewMemMapFs()
+	s := NewWithFS(fs)
+	s.RegisterTemplate("ok", "ok")
+	s.RegisterTemplate("bad", "{{fail \"x\"}}")
+	s.Prepare(&prayer.Raw{Input: "ok", Output: "1"})
+	s.Prepare(&prayer.Raw{Input: "bad", Output: "2"})
+	s.Prepare(&prayer.Raw{Input: "ok", Output: "3"})
+	if err := s.Pray(); err == nil {
+		t.Fatal("expected error")
+	}
+	if len(s.foyer.Prayers) != 2 {
+		t.Fatalf("queue len %d", len(s.foyer.Prayers))
+	}
+	s.RegisterTemplate("bad", "fixed")
+	if err := s.Pray(); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.foyer.Prayers) != 0 {
+		t.Fatalf("queue len %d", len(s.foyer.Prayers))
+	}
+}

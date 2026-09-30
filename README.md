@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	temple.RegisterTemplateDir(".") // template name = file name w/o extension
+	temple.RegisterTemplateDir(".") // recursive, template name = file name w/o extension
 	temple.Prepare(&prayer.Go{
 		Input:  "mapn",
 		Obj:    map[string]any{"Count": 10},

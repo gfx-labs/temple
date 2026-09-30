@@ -2,6 +2,7 @@ package sanctum
 
 import (
 	"fmt"
+	"io/fs"
 	"maps"
 	"path/filepath"
 	"strings"
@@ -131,26 +132,34 @@ func (t *Sanctum) RegisterTemplateFile(name string) error {
 	return nil
 }
 
-// RegisterTemplateDir scans for files ending in .gotmpl or .tmpl and registers them as templates
+// RegisterTemplateDir recursively scans path for files ending in .gotmpl or .tmpl and registers them as templates.
+// Hidden directories are skipped. Two files with the same base name is an error.
 func (t *Sanctum) RegisterTemplateDir(path string) error {
-	files, err := afero.ReadDir(t.fs, path)
+	seen := map[string]string{}
+	err := afero.Walk(t.fs, path, func(p string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			if p != path && strings.HasPrefix(info.Name(), ".") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		switch filepath.Ext(p) {
+		case ".gotmpl", ".tmpl":
+		default:
+			return nil
+		}
+		name := strings.TrimSuffix(info.Name(), filepath.Ext(p))
+		if prev, ok := seen[name]; ok {
+			return fmt.Errorf("template %q defined by both %s and %s", name, prev, p)
+		}
+		seen[name] = p
+		return t.RegisterTemplateFile(p)
+	})
 	if err != nil {
 		return fmt.Errorf("register template dir %s: %w", path, err)
-	}
-	for _, file := range files {
-		if file.IsDir() {
-			// TODO should this be recursive?
-			continue
-		}
-
-		switch filepath.Ext(file.Name()) {
-		case ".gotmpl", ".tmpl":
-			if err := t.RegisterTemplateFile(filepath.Join(path, file.Name())); err != nil {
-				return err
-			}
-		default:
-			continue
-		}
 	}
 	return nil
 }
@@ -188,9 +197,11 @@ func (t *Sanctum) Curse() {
 	t.foyer.Prayers = t.foyer.Prayers[:0]
 }
 
-// Pray executes all current Prayer
+// Pray executes all queued prayers and removes each one from the queue once written.
+// On error the failed prayer and any after it stay queued.
 func (t *Sanctum) Pray() error {
-	for _, v := range t.foyer.Prayers {
+	for len(t.foyer.Prayers) > 0 {
+		v := t.foyer.Prayers[0]
 		output, err := t.execute(v.Template(), v.Object(), v.Arguments()...)
 		if err != nil {
 			return fmt.Errorf("exec tmpl=%s file=%s: %w", v.Template(), v.FileName(), err)
@@ -208,6 +219,8 @@ func (t *Sanctum) Pray() error {
 		if err != nil {
 			return fmt.Errorf("write tmpl=%s file=%s err=%w", v.Template(), v.FileName(), err)
 		}
+		t.foyer.Prayers[0] = nil
+		t.foyer.Prayers = t.foyer.Prayers[1:]
 	}
 	return nil
 }
